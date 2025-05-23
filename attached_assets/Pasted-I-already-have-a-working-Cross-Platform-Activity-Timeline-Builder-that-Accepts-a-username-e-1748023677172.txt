@@ -1,0 +1,58 @@
+I already have a working Cross-Platform Activity Timeline Builder that:
+
+  • Accepts a username, email, or hashtag  
+  • Ingests events from Twitter, Reddit, GitHub, blogs (RSS), and Pastebin  
+  • Normalizes timestamps, dedupes entries, classifies events, and merges them into a chronological Markdown or HTML timeline.
+
+Now I want to supercharge it with these next-level features. Please help me design and scaffold code for each of the following enhancements in TypeScript (Node.js for backend, React for frontend):
+
+1. **Entity Extraction & Linkage**  
+   - Integrate an NLP pipeline (e.g. spaCy via a thin Python microservice or an npm library like `compromise` or `@nlpjs/basic`).  
+   - Extract named entities (PERSON, ORG, LOCATION) from each event’s text.  
+   - Link events by shared entities and add cross-references in the timeline output.
+
+2. **Sentiment & Tone Analysis**  
+   - Use an LLM or a sentiment library (e.g. `sentiment`, Hugging Face inference) to assign a polarity score to each post.  
+   - Add “sentiment” property to the `TimelineEvent` model and include an emoji or color indicator in Markdown/HTML.
+
+3. **Interaction & Network Graph**  
+   - Capture @-mentions, replies, retweets, forks, stars, etc. as edges between users.  
+   - Build a social graph data structure (nodes = users, edges = interactions).  
+   - Scaffold a D3.js or `react-force-graph` component to render the graph interactively.
+
+4. **Geolocation Mapping**  
+   - Detect geotags in posts or extract location mentions (NER from step 1).  
+   - Use a geocoding API (e.g. Mapbox, OpenStreetMap) to convert location names to coordinates.  
+   - Add a Leaflet or Mapbox GL map view that plots events on the timeline by geography.
+
+5. **Topic Clustering & Trends**  
+   - Use LDA (`natural`) or transformer embeddings (`@huggingface/inference`) to cluster event texts into 3–5 topics.  
+   - Annotate each event with its topic label and show per-topic color stripes or filters in the UI.
+
+6. **Real-Time Streaming & Alerts**  
+   - Add support for Twitter Filtered Stream API or Reddit live push notifications.  
+   - When new live events match user-defined keywords (e.g. “breach”, “exploit”), trigger a webhook or desktop notification.  
+   - Scaffold a simple alert dispatcher module.
+
+7. **Custom Filters & Dashboards**  
+   - Extend the React frontend with controls to filter by platform, date range, sentiment, entity, or topic.  
+   - Use Recharts or Chart.js to display summary charts (e.g. posts per day, sentiment over time).
+
+8. **Automated Reporting & Scheduling**  
+   - Add a cron-style scheduler (e.g. `node-cron`) to run the timeline build daily or weekly.  
+   - Generate both Markdown and PDF (using `puppeteer`) or HTML report snapshots and email them via SMTP.
+
+9. **Anomaly Detection**  
+   - Implement a simple statistical detector (z-score or rolling average) on post volumes or sentiment to flag sudden spikes.  
+   - Mark anomalous events in the timeline and send an alert.
+
+10. **Integrate External Threat Feeds**  
+   - Pull structured threat intel (AbuseIPDB, VirusTotal) via their APIs.  
+   - Merge those indicators into the timeline as special “Threat” events, with links to reports.
+
+**Please**:  
+- Define or update the `TimelineEvent` interface to include all new properties.  
+- Scaffold separate modules/files for each feature with placeholder import statements.  
+- Show example usage in the CLI (`commander`) and React UI.  
+- Provide comments explaining where to fill in API keys or implementation details.  
+- Keep the code modular so I can enable or disable features easily.
