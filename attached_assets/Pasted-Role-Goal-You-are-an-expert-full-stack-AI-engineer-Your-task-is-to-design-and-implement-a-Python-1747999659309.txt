@@ -1,0 +1,177 @@
+Role & Goal:
+You are an expert full-stack AI engineer. Your task is to design and implement a Python-based, microservice-driven OSINT assistant with a rich CLI and optional web dashboard. The assistant must support everything from conversational flow to advanced ML classification, proxy/Tor usage, automated reporting, observability, and secure deployment.
+
+1. Overall Architecture
+Microservices (Docker-ready, orchestrated via Docker Compose or Kubernetes):
+
+CLI Bot
+
+Python + prompt_toolkit/rich
+
+Typo-tolerant parser, interactive prompts
+
+Scraper Service
+
+Python async with aiohttp/httpx
+
+Adaptive rate-limiting, concurrency control
+
+Downloader Service
+
+Option A: Python with asyncio, tenacity
+
+Option B: Go microservice for super-high concurrency
+
+ML/Classifier Service
+
+FastAPI + spaCy/transformers + custom models
+
+Report Generator
+
+Jinja2 → HTML/PDF via WeasyPrint
+
+Dashboard API & Frontend
+
+FastAPI
+
+React + TypeScript + ShadCN/UI + WebSockets/Socket.IO
+
+Orchestration & Communication:
+
+Message Broker: Redis Streams or RabbitMQ
+
+Task Queue: Celery (Python) or Go equivalent
+
+Storage:
+
+Local filesystem (configurable root)
+
+Optional S3-compatible bucket
+
+Neo4j for entity graphs
+
+2. Core Features & Flow
+Configuration & Secrets
+
+YAML/JSON config file + CLI flags for API keys, proxy lists, concurrency, file-types, output paths.
+
+Load sensitive values (Tor password, CAPTCHA key) from environment variables or vault.
+
+Startup & Greeting
+
+Warm greeting.
+
+Typo-tolerant parsing; suggestions for invalid commands.
+
+Dork Input & Validation
+
+Prompt: “Enter your Google-style dork.”
+
+Validate; on syntax errors, suggest corrections.
+
+Result Mode Selection
+
+List URLs (with HTTP status codes).
+
+Download Files (choose file types: PDF, PPT, DOC, DOCX, XLS, CSV, etc.)
+
+Download Configuration
+
+Prompt: “Select a folder or create a new one. Enter folder name if new.”
+
+Auto-create per-domain subfolders (e.g., example.gov.ae/).
+
+Sanitize folder names to prevent path traversal.
+
+Scraping & Downloading
+
+Async fetch with adaptive rate-limiting, concurrency pools.
+
+Handle: redirects, 404s, timeouts, UA blocks, SSL errors, CAPTCHAs.
+
+Respect robots.txt by default (override flag available).
+
+Download only selected types; retry/backoff via tenacity.
+
+Progress & Summary
+
+Real-time CLI progress bar or live updates to dashboard.
+
+Final summary: counts of successes/failures (with reasons), paths.
+
+3. Advanced Modules (Optional Toggles)
+Language Detection & Content Classification (legal vs. technical vs. sensitive).
+
+Proxy/Tor Support (stem + aiohttp-socks + dynamic IP rotation).
+
+Entity Extraction & Graph Building → Neo4j storage + frontend viz.
+
+Headless Browser (Playwright) for JS-heavy sites.
+
+CAPTCHA Handling (integrate 3rd-party solving APIs).
+
+Scheduled Jobs & Alerts (APScheduler + Slack/Email webhooks).
+
+Plugin System: discover parsers/exporters via Python entry-points.
+
+4. Observability & Resilience
+Logging: Structured logs (structlog), configurable levels.
+
+Metrics: Expose Prometheus metrics (request timings, queue lengths).
+
+Health Checks: Simple /health endpoint per service.
+
+Error Handling: Global exception handlers, graceful shutdown (SIGINT/SIGTERM).
+
+Monitoring Integration: Optional ELK or Graylog connectors.
+
+5. Testing & QA
+Unit Tests: Pytest for Python, Go tests for Go modules.
+
+Integration Tests: Mock HTTP servers to simulate target sites.
+
+API Tests: Postman collection or equivalent.
+
+Type Checking: mypy/pyright on all code.
+
+CI/CD: GitHub Actions to lint, type-check, test, build Docker images, and deploy.
+
+6. Packaging & Deployment
+Dockerfiles & docker-compose.yml ready to run.
+
+Makefile or poetry/pipenv scripts for common tasks (lint, test, build, run).
+
+Kubernetes Manifests: Deployment, Service, ConfigMap, Secret examples.
+
+7. Documentation & Onboarding
+Auto-generated Docs: Sphinx or MkDocs from docstrings.
+
+Quickstart Guide: How to launch CLI, web UI, configure services.
+
+README Snippets: Per-service purpose, options, and example commands.
+
+8. Security Best Practices
+Enforce robots.txt compliance (override flag).
+
+Sanitize all inputs to prevent injection/path traversal.
+
+Optionally encrypt sensitive files at rest.
+
+Store secrets outside code (env vars or vault).
+
+Deliverables
+Clean repo structure with all services, configs, and docs.
+
+CLI prototype demonstrating full conversational flow.
+
+Async scraper & downloader modules with domain folder logic.
+
+ML classifier service stub + sample integration.
+
+React dashboard showing live progress & summary.
+
+Automated report template (HTML + PDF).
+
+Tests & CI/CD pipelines for all components.
+
+Use clear comments, follow best practices for security and modularity, and ensure each service can run independently or together via Docker Compose or Kubernetes.
