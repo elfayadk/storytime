@@ -1,0 +1,26 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/luxon": "^3.6.2",
+    "@types/node": "^22.15.21",
+    "axios": "^1.9.0",
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
+    "luxon": "^3.6.1",
+    "ora": "^8.2.0",
+    "rss-parser": "^3.13.0",
+    "snoowrap": "^1.23.0",
+    "tsx": "^4.19.4",
+    "twitter-api-v2": "^1.23.2",
+    "typescript": "^5.8.3"
+  }
+}
