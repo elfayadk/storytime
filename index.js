@@ -1,0 +1,27 @@
+// Cross-Platform Activity Timeline Builder Demo
+console.log('Cross-Platform Activity Timeline Builder');
+console.log('=======================================');
+console.log('');
+console.log('This is a powerful OSINT tool that builds unified timelines from multiple platforms.');
+console.log('');
+console.log('Features include:');
+console.log('- Multi-platform data collection (Twitter, Reddit, GitHub, RSS, Pastebin)');
+console.log('- NLP analysis with sentiment detection and entity extraction');
+console.log('- Network analysis of connections between people, organizations and events');
+console.log('- Geographic visualization and mapping');
+console.log('- Interactive dashboards with timeline visualization');
+console.log('- Multiple export formats (Markdown, HTML, JSON, CSV, XML)');
+console.log('');
+console.log('To use this tool, run one of the following commands:');
+console.log('');
+console.log('Basic usage:');
+console.log('  node cli/advanced-cli.js build --target <username>');
+console.log('');
+console.log('With analysis:');
+console.log('  node cli/advanced-cli.js build --target <username> --analyze-sentiment --analyze-entities --analyze-topics');
+console.log('');
+console.log('With visualization:');
+console.log('  node cli/advanced-cli.js build --target <username> --dashboard --theme dark --interactive');
+console.log('');
+console.log('For more options, run:');
+console.log('  node cli/advanced-cli.js --help');
