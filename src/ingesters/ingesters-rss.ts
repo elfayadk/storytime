@@ -6,7 +6,7 @@
 import Parser from 'rss-parser';
 import axios from 'axios';
 import { DateTime } from 'luxon';
-import { TimelineEvent, RSSConfig } from './types.js';
+import { TimelineEvent, RSSConfig } from '../types/types';
 
 export class RSSIngester {
   private parser: Parser;

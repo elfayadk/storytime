@@ -16,28 +16,21 @@ export type EventCategory =
   | 'other';
 
 // Entity types for NLP extraction
-export type EntityType = 
-  | 'person' | 'organization' | 'location' 
-  | 'product' | 'event' | 'date' | 'url' 
-  | 'email' | 'phone' | 'hashtag' | 'mention' 
-  | 'keyword' | 'other';
+export type EntityType = 'person' | 'organization' | 'place' | 'date' | 'url' | 'email' | 'hashtag' | 'mention';
 
 // Sentiment analysis score type
-export type SentimentScore = {
+export interface SentimentScore {
   /** Overall sentiment score (-1.0 to 1.0) */
   score: number;
   
-  /** Sentiment magnitude/strength (0.0 to +inf) */
-  magnitude: number;
-  
   /** Primary sentiment (positive, negative, neutral) */
-  label: 'positive' | 'negative' | 'neutral';
-};
+  label: string;
+}
 
 // Extracted entity from content
 export interface Entity {
   /** Entity text as it appears in content */
-  text: string;
+  value: string;
   
   /** Entity type classification */
   type: EntityType;

@@ -9,15 +9,15 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { DateTime } from 'luxon';
-import { TimelineConfig, Platform, PlatformConfigs } from './types.js';
-import { TimelineProcessor } from './timeline-processor.js';
-import { TwitterIngester } from './ingesters/twitter.js';
-import { RedditIngester } from './ingesters/reddit.js';
-import { GitHubIngester } from './ingesters/github.js';
-import { RSSIngester } from './ingesters/rss.js';
-import { PastebinIngester } from './ingesters/pastebin.js';
-import { MarkdownExporter } from './exporters/markdown.js';
-import { HTMLExporter } from './exporters/html.js';
+import { TimelineConfig, Platform, PlatformConfigs } from './types/types.js';
+import { TimelineProcessor } from './processors/timeline-processor.js';
+import { TwitterIngester } from './ingesters/ingesters-twitter.js';
+import { RedditIngester } from './ingesters/ingesters-reddit.js';
+import { GitHubIngester } from './ingesters/ingesters-github.js';
+import { RSSIngester } from './ingesters/ingesters-rss.js';
+import { PastebinIngester } from './ingesters/ingesters-pastebin.js';
+import { MarkdownExporter } from './exporters/exporters-markdown.js';
+import { HTMLExporter } from './exporters/exporters-html.js';
 
 const program = new Command();
 
@@ -112,8 +112,8 @@ program
       }
 
       if (config.output.html) {
-        const htmlExporter = new HTMLExporter();
-        const htmlPath = await htmlExporter.export(timeline, config);
+        const htmlExporter = new HTMLExporter(timeline, config);
+        const htmlPath = await htmlExporter.export();
         console.log(chalk.green(`✅ HTML timeline exported to: ${htmlPath}`));
       }
 

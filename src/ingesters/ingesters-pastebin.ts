@@ -5,7 +5,7 @@
 
 import axios from 'axios';
 import { DateTime } from 'luxon';
-import { TimelineEvent, PastebinConfig } from './types.js';
+import { TimelineEvent, PastebinConfig } from '../types/types';
 
 export class PastebinIngester {
   private config: PastebinConfig;

@@ -3,9 +3,9 @@
  * Fetches tweets, replies, and user activity
  */
 
-import { TwitterApi } from 'twitter-api-v2';
+import { TwitterApi, TweetV2, Tweetv2SearchParams, TweetV2UserTimelineParams, ApiResponseError } from 'twitter-api-v2';
 import { DateTime } from 'luxon';
-import { TimelineEvent, TwitterConfig } from './types.js';
+import { TimelineEvent, TwitterConfig } from '../types/types.js';
 
 export class TwitterIngester {
   private client: TwitterApi;
@@ -69,31 +69,34 @@ export class TwitterIngester {
     const events: TimelineEvent[] = [];
     
     try {
-      const searchParams: any = {
+      const searchParams: Tweetv2SearchParams = {
         query: hashtag,
         max_results: 100,
         'tweet.fields': ['created_at', 'author_id', 'public_metrics', 'context_annotations'],
         'user.fields': ['username', 'name'],
-        expansions: ['author_id']
+        expansions: ['author_id'],
+        ...(dateRange && {
+          start_time: dateRange.start?.toISO() || undefined,
+          end_time: dateRange.end?.toISO() || undefined
+        })
       };
 
-      // Add date range if specified
-      if (dateRange) {
-        searchParams.start_time = dateRange.start.toISO();
-        searchParams.end_time = dateRange.end.toISO();
-      }
-
-      const tweets = await this.client.v2.search(searchParams);
+      const response = await this.client.v2.search(searchParams.query);
+      const tweets = await response.fetchLast(100);
       
-      for (const tweet of tweets.data || []) {
+      if (!tweets || !tweets.data) return events;
+
+      // Convert tweets.data to array if it's not already
+      const tweetData = tweets.data as unknown as TweetV2[];
+      tweetData.forEach((tweet) => {
         const author = tweets.includes?.users?.find(u => u.id === tweet.author_id);
         
         events.push({
           id: `twitter-${tweet.id}`,
           platform: 'twitter',
           category: 'post',
-          timestamp: DateTime.fromISO(tweet.created_at!),
-          originalTimestamp: tweet.created_at!,
+          timestamp: DateTime.fromISO(tweet.created_at || ''),
+          originalTimestamp: tweet.created_at || '',
           title: `Tweet by @${author?.username || 'unknown'}`,
           content: tweet.text,
           url: `https://twitter.com/${author?.username}/status/${tweet.id}`,
@@ -105,9 +108,13 @@ export class TwitterIngester {
             contextAnnotations: tweet.context_annotations
           }
         });
-      }
+      });
     } catch (error) {
-      console.error(`Failed to search hashtag tweets: ${error}`);
+      if (error instanceof ApiResponseError) {
+        console.error(`Twitter API error: ${error.message}`);
+      } else {
+        console.error(`Failed to search hashtag tweets: ${error}`);
+      }
     }
 
     return events;
@@ -132,27 +139,30 @@ export class TwitterIngester {
         throw new Error(`User ${cleanUsername} not found`);
       }
 
-      const timelineParams: any = {
+      const timelineParams: TweetV2UserTimelineParams = {
         max_results: 100,
         'tweet.fields': ['created_at', 'public_metrics', 'context_annotations'],
-        exclude: ['retweets', 'replies'] // Focus on original tweets
+        exclude: ['retweets', 'replies'],
+        ...(dateRange && {
+          start_time: dateRange.start?.toISO() || undefined,
+          end_time: dateRange.end?.toISO() || undefined
+        })
       };
 
-      // Add date range if specified
-      if (dateRange) {
-        timelineParams.start_time = dateRange.start.toISO();
-        timelineParams.end_time = dateRange.end.toISO();
-      }
-
-      const timeline = await this.client.v2.userTimeline(user.data.id, timelineParams);
+      const response = await this.client.v2.userTimeline(user.data.id, timelineParams);
+      const tweets = await response.fetchLast(100);
       
-      for (const tweet of timeline.data || []) {
+      if (!tweets || !tweets.data) return events;
+
+      // Convert tweets.data to array if it's not already
+      const tweetData = tweets.data as unknown as TweetV2[];
+      tweetData.forEach((tweet) => {
         events.push({
           id: `twitter-${tweet.id}`,
           platform: 'twitter',
           category: 'post',
-          timestamp: DateTime.fromISO(tweet.created_at!),
-          originalTimestamp: tweet.created_at!,
+          timestamp: DateTime.fromISO(tweet.created_at || ''),
+          originalTimestamp: tweet.created_at || '',
           title: `Tweet by @${cleanUsername}`,
           content: tweet.text,
           url: `https://twitter.com/${cleanUsername}/status/${tweet.id}`,
@@ -164,10 +174,14 @@ export class TwitterIngester {
             contextAnnotations: tweet.context_annotations
           }
         });
-      }
+      });
 
     } catch (error) {
-      console.error(`Failed to get user tweets: ${error}`);
+      if (error instanceof ApiResponseError) {
+        console.error(`Twitter API error: ${error.message}`);
+      } else {
+        console.error(`Failed to get user tweets: ${error}`);
+      }
     }
 
     return events;
