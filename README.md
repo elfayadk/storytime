@@ -46,7 +46,7 @@ A modern React-based application for visualizing and analyzing timeline data acr
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/storytime.git
+git clone https://github.com/elfayadk/storytime.git
 cd storytime
 ```
 
@@ -127,13 +127,11 @@ npm run build
 4. Push to the branch
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
 - Material-UI for the component library
 - Framer Motion for animations
 - Recharts for data visualization
-- The React community for inspiration and support 
+- The React community for inspiration and support
+- Yumna, Love of my life
