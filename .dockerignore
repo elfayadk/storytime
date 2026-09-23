@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+**/dist
+legacy
+data
+.git
+.env
+*.log
+attached_assets
+docs

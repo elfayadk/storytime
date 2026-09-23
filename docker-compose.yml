@@ -1,0 +1,36 @@
+# Storytime v2 — one command to run everything: `docker compose up --build`
+# 100% free/open-source. The optional `ollama` profile adds a local LLM.
+services:
+  storytime:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - STORYTIME_DB=/data/storytime.db
+      # Optional: point at the ollama service (enable with --profile ai)
+      - OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}
+      - OLLAMA_ENDPOINT=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      # Optional free credentials (all blank by default)
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:-}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:-}
+      - NOMINATIM_EMAIL=${NOMINATIM_EMAIL:-}
+    volumes:
+      - storytime-data:/data
+    restart: unless-stopped
+
+  # Optional local LLM. Start with:  docker compose --profile ai up --build
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  storytime-data:
+  ollama-data:
