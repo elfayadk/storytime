@@ -50,11 +50,14 @@ export function Graph({
       .filter((e) => pos.has(e.source) && pos.has(e.target))
       .slice(0, 120);
 
-    return { W, H, pos, links, hubId: hub.id };
+    // Only label the strongest few to avoid crowding.
+    const labeled = new Set(others.slice(0, 8).map((n) => n.id));
+
+    return { W, H, pos, links, hubId: hub.id, labeled };
   }, [nodes, edges, subject]);
 
   if (!layout) return null;
-  const { W, H, pos, links, hubId } = layout;
+  const { W, H, pos, links, hubId, labeled } = layout;
 
   return (
     <section className="panel">
@@ -97,7 +100,7 @@ export function Graph({
                   strokeWidth: 1,
                 }}
               />
-              {(isHub || hover === id || p.r > 8) && (
+              {(isHub || hover === id || labeled.has(id)) && (
                 <text
                   x={p.x}
                   y={p.y - p.r - 4}
