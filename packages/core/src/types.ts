@@ -15,7 +15,8 @@ export type Platform =
   | 'hackernews'
   | 'devto'
   | 'gitlab'
-  | 'wikipedia';
+  | 'wikipedia'
+  | 'stackexchange';
 
 export const PLATFORMS: Platform[] = [
   'github',
@@ -28,6 +29,7 @@ export const PLATFORMS: Platform[] = [
   'devto',
   'gitlab',
   'wikipedia',
+  'stackexchange',
 ];
 
 /** Event categories for classification. */
@@ -197,9 +199,32 @@ export interface ActivityRhythm {
   total: number;
 }
 
+/** A normalized public profile for the subject (GitHub / GitLab). */
+export interface Profile {
+  platform: Platform;
+  handle: string;
+  displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
+  url: string;
+  location?: string;
+  company?: string;
+  blog?: string;
+  followers?: number;
+  following?: number;
+  repos?: number;
+  joined?: string;
+  topLanguages?: { name: string; count: number }[];
+  topRepos?: { name: string; url: string; stars: number; description?: string; language?: string }[];
+}
+
 export interface TimelineResult {
   target: string;
   generatedAt: string;
+  /** Subject profile card, when resolvable. */
+  profile?: Profile;
+  /** AI-written intelligence brief (Ollama), when enabled and reachable. */
+  brief?: string;
   events: TimelineEvent[];
   stats: TimelineStats;
   graph: NetworkGraph;

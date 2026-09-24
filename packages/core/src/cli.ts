@@ -20,7 +20,7 @@ program
   .argument('<target>', 'username, @handle, user@instance (mastodon), or #hashtag')
   .option('-p, --platforms <list>', `comma list: ${PLATFORMS.join(',')}`, 'github,mastodon,bluesky,hackernews,devto')
   .option('-l, --limit <n>', 'max events per platform', '50')
-  .option('-f, --format <fmt>', 'json|csv|md|xml|html', 'md')
+  .option('-f, --format <fmt>', 'json|csv|md|xml|html|dossier', 'md')
   .option('-o, --output <file>', 'write to file (default: stdout)')
   .option('--since <iso>', 'only events on/after this ISO date')
   .option('--until <iso>', 'only events on/before this ISO date')

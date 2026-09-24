@@ -262,6 +262,21 @@ a { color: inherit; }
 .source-badge b { color: var(--muted); font-weight: 500; font-family: var(--mono); }
 .dossier .meta { color: var(--muted); font-size: 13px; font-family: var(--mono); }
 
+/* ---- profile card --------------------------------------------------------- */
+.profilecard { display: flex; gap: 18px; }
+.profilecard .avatar { width: 80px; height: 80px; border-radius: 14px; flex: none; object-fit: cover; border: 1px solid var(--line); }
+.pinfo { min-width: 0; }
+.pname { font-family: var(--serif); font-weight: 600; font-size: 22px; letter-spacing: -0.01em; }
+.phandle { color: var(--signal); text-decoration: none; font-family: var(--mono); font-size: 12.5px; }
+.phandle:hover { text-decoration: underline; }
+.pbio { margin: 8px 0; }
+.pmeta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
+.prepos { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+.prepo { color: var(--text); text-decoration: none; font-size: 13.5px; display: block; }
+.prepo:hover b { color: var(--signal); }
+.prepo .stars { color: var(--signal); font-family: var(--mono); font-size: 11.5px; margin-left: 6px; }
+.prepo em { color: var(--muted); font-style: normal; display: block; font-size: 12.5px; margin-top: 1px; }
+
 /* ---- sparkline ------------------------------------------------------------ */
 .sparkline { width: 100%; height: 64px; display: block; margin-top: 16px; }
 

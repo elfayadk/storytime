@@ -1,6 +1,12 @@
 import type { StorytimeConfig } from '../config.js';
 import type { Logger } from '../util/logger.js';
-import type { TimelineEvent, TimelineStats } from '../types.js';
+import type {
+  ClusterSummary,
+  Insight,
+  Profile,
+  TimelineEvent,
+  TimelineStats,
+} from '../types.js';
 
 /**
  * Optional local LLM via Ollama (https://ollama.com) - free & open-source,
@@ -80,6 +86,51 @@ export class OllamaClient {
         `events you use with their [number]. If the events don't answer it, say so.\n\n` +
         `Events:\n${numbered}\n\nQuestion: ${question}\n\nAnswer:`,
       1500,
+    );
+  }
+
+  /**
+   * A written intelligence brief synthesizing the whole profile: who the
+   * subject appears to be, what they work on, how they behave, and the notable
+   * moments. Grounded strictly in the supplied facts.
+   */
+  async brief(
+    target: string,
+    ctx: {
+      profile?: Profile;
+      stats: TimelineStats;
+      rhythm?: { summary: string };
+      clusters?: ClusterSummary[];
+      insights?: Insight[];
+      events: TimelineEvent[];
+    },
+  ): Promise<string | null> {
+    if (ctx.events.length === 0) return null;
+    const facts: string[] = [];
+    if (ctx.profile) {
+      const p = ctx.profile;
+      facts.push(
+        `Profile (${p.platform}): ${p.displayName ?? p.handle}` +
+          (p.bio ? `, bio "${p.bio}"` : '') +
+          (p.location ? `, location ${p.location}` : '') +
+          (p.company ? `, ${p.company}` : '') +
+          (p.repos != null ? `, ${p.repos} public repos` : '') +
+          (p.followers != null ? `, ${p.followers} followers` : '') +
+          (p.topLanguages?.length ? `, languages ${p.topLanguages.map((l) => l.name).join(', ')}` : ''),
+      );
+    }
+    facts.push(`Activity: ${ctx.stats.totalEvents} events across ${Object.keys(ctx.stats.byPlatform).join(', ')}.`);
+    if (ctx.rhythm) facts.push(`Rhythm: ${ctx.rhythm.summary}.`);
+    if (ctx.clusters?.length) facts.push(`Themes: ${ctx.clusters.slice(0, 5).map((c) => c.label).join('; ')}.`);
+    if (ctx.insights?.length) facts.push(`Notable: ${ctx.insights.slice(0, 3).map((i) => i.detail).join('; ')}.`);
+    const recent = ctx.events.slice(0, 25).map((e) => `- ${e.timestamp.toISODate()} (${e.platform}) ${e.title}`).join('\n');
+
+    return this.generate(
+      `Write a concise intelligence brief on the public account "${target}" using ONLY the facts below. ` +
+        `Three short paragraphs: who they appear to be and what they work on; how they behave (cadence, tone, platforms); ` +
+        `and anything notable. Neutral, factual, no speculation beyond the data.\n\n` +
+        `Facts:\n${facts.join('\n')}\n\nRecent activity:\n${recent}\n\nBrief:`,
+      2000,
     );
   }
 

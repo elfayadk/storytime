@@ -8,7 +8,8 @@ export type Platform =
   | 'hackernews'
   | 'devto'
   | 'gitlab'
-  | 'wikipedia';
+  | 'wikipedia'
+  | 'stackexchange';
 
 export interface Sentiment {
   score: number;
@@ -76,10 +77,29 @@ export interface ClusterSummary {
   eventIds: string[];
   summary?: string;
 }
+export interface Profile {
+  platform: Platform;
+  handle: string;
+  displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
+  url: string;
+  location?: string;
+  company?: string;
+  blog?: string;
+  followers?: number;
+  following?: number;
+  repos?: number;
+  joined?: string;
+  topLanguages?: { name: string; count: number }[];
+  topRepos?: { name: string; url: string; stars: number; description?: string; language?: string }[];
+}
 export interface TimelineResult {
   id?: string;
   target: string;
   generatedAt: string;
+  profile?: Profile;
+  brief?: string;
   events: SerializedEvent[];
   stats: Stats;
   rhythm?: ActivityRhythm;
@@ -130,6 +150,7 @@ export const PLATFORM_META: Record<Platform, { icon: string; label: string }> = 
   devto: { icon: '◆', label: 'DEV' },
   gitlab: { icon: '▰', label: 'GitLab' },
   wikipedia: { icon: '◎', label: 'Wikipedia' },
+  stackexchange: { icon: '△', label: 'Stack Overflow' },
 };
 
 export const ALL_PLATFORMS: Platform[] = [
@@ -139,6 +160,7 @@ export const ALL_PLATFORMS: Platform[] = [
   'bluesky',
   'hackernews',
   'devto',
+  'stackexchange',
   'wikipedia',
   'reddit',
   'rss',

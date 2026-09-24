@@ -55,6 +55,10 @@ as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
 | **Bluesky** | public AppView (`public.api.bsky.app`) | none |
 | **Hacker News** | public Algolia search API | none |
 | **Dev.to** | public articles API | none |
+| **GitLab** | public REST API v4 | none |
+| **Wikipedia** | MediaWiki usercontribs API | none |
+| **Stack Overflow** | public Stack Exchange API | none |
+| **Blog (auto)** | RSS/Atom auto-discovered from the profile's site | none |
 | **Reddit** | public JSON / free OAuth app | none, or free app for reliability¹ |
 | **RSS/Atom** | any feed URL | none |
 | **Pastebin** | public raw pastes by ID | none |

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SearchBar } from './components/SearchBar';
 import { Dossier } from './components/Dossier';
+import { ProfileCard } from './components/ProfileCard';
 import { Signals } from './components/Signals';
 import { Rhythm } from './components/Rhythm';
 import { Trends } from './components/Trends';
@@ -121,18 +122,25 @@ export default function App() {
           <div className="stack">
             <Dossier result={result} />
 
-            {result.narrative ? (
-              <section className="panel fade-up">
+            {result.profile ? <ProfileCard profile={result.profile} /> : null}
+
+            {result.brief || result.narrative ? (
+              <section className="panel">
                 <h2 className="section-title">Brief</h2>
-                <p style={{ margin: 0, lineHeight: 1.65 }}>{result.narrative}</p>
+                <p style={{ margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
+                  {result.brief ?? result.narrative}
+                </p>
               </section>
             ) : null}
 
             <Signals result={result} />
 
             {result.id ? (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <span className="tag" style={{ alignSelf: 'center', marginRight: 4 }}>Export</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <a className="btn btn-primary" href={exportUrl(result.id, 'dossier')} target="_blank" rel="noopener" style={{ textDecoration: 'none' }}>
+                  Download dossier
+                </a>
+                <span className="tag" style={{ alignSelf: 'center', margin: '0 4px' }}>or raw data</span>
                 {FORMATS.map((f) => (
                   <a key={f} className="pill" href={exportUrl(result.id!, f)} target="_blank" rel="noopener">
                     {f}

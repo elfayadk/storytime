@@ -10,6 +10,7 @@ import { hackernewsIngester } from './hackernews.js';
 import { devtoIngester } from './devto.js';
 import { gitlabIngester } from './gitlab.js';
 import { wikipediaIngester } from './wikipedia.js';
+import { stackexchangeIngester } from './stackexchange.js';
 
 export const INGESTERS: Record<Platform, Ingester> = {
   github: githubIngester,
@@ -22,6 +23,7 @@ export const INGESTERS: Record<Platform, Ingester> = {
   devto: devtoIngester,
   gitlab: gitlabIngester,
   wikipedia: wikipediaIngester,
+  stackexchange: stackexchangeIngester,
 };
 
 export function getIngesters(platforms: Platform[]): Ingester[] {

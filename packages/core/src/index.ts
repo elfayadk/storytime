@@ -11,6 +11,7 @@ export { extractEntities } from './processors/entities.js';
 export { assignTopics } from './processors/topics.js';
 export { detectAnomalies } from './processors/anomaly.js';
 export { computeRhythm } from './processors/rhythm.js';
+export { collectProfile, discoverFeed } from './processors/profile.js';
 export { simhash, hammingDistance, fuseCrossPosts } from './processors/dedup.js';
 export { fingerprint, fingerprintAuthors } from './processors/stylometry.js';
 export type { StyleFingerprint } from './processors/stylometry.js';

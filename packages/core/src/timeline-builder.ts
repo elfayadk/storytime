@@ -7,6 +7,7 @@ import { computeStats } from './processors/stats.js';
 import { buildNetwork } from './processors/network.js';
 import { detectAnomalies } from './processors/anomaly.js';
 import { computeRhythm } from './processors/rhythm.js';
+import { collectProfile, discoverFeed } from './processors/profile.js';
 import { OllamaClient } from './ai/ollama.js';
 import type { Platform, TimelineEvent, TimelineResult } from './types.js';
 
@@ -44,6 +45,19 @@ export async function buildTimeline(
     until: config.until ? DateTime.fromISO(config.until) : undefined,
   };
 
+  // 0. Resolve the subject profile (GitHub / GitLab), and auto-discover their
+  //    blog feed so it joins the RSS ingestion.
+  progress({ phase: 'ingest', message: 'Resolving subject profile' });
+  const profile = await collectProfile(target, config, logger);
+  if (profile?.blog) {
+    const feed = await discoverFeed(profile.blog, config, logger);
+    if (feed && !config.rssFeeds.includes(feed)) {
+      config.rssFeeds = [...config.rssFeeds, feed];
+      if (!config.platforms.includes('rss')) config.platforms = [...config.platforms, 'rss'];
+      logger.info(`discovered blog feed: ${feed}`);
+    }
+  }
+
   // 1. Ingest from every applicable platform, in parallel.
   const ingesters = getIngesters(config.platforms).filter((i) =>
     i.applicable(target, ctx),
@@ -78,13 +92,15 @@ export async function buildTimeline(
   const insights = detectAnomalies(events);
   const rhythm = computeRhythm(events);
 
-  // 4. Optional AI narrative over the whole timeline.
+  // 4. Optional AI narrative + written dossier brief over the whole timeline.
   let narrative: string | undefined;
+  let brief: string | undefined;
   if ((options.enrich?.ai ?? config.ai.enabled) && events.length) {
     const ollama = new OllamaClient(config, logger);
     if (await ollama.available()) {
-      progress({ phase: 'narrate', message: 'Generating AI narrative (Ollama)' });
+      progress({ phase: 'narrate', message: 'Writing the intelligence brief (Ollama)' });
       narrative = (await ollama.narrate(target, events, stats)) ?? undefined;
+      brief = (await ollama.brief(target, { profile, stats, rhythm, clusters, insights, events })) ?? undefined;
     }
   }
 
@@ -92,6 +108,8 @@ export async function buildTimeline(
   return {
     target,
     generatedAt: DateTime.now().toISO()!,
+    profile,
+    brief,
     events,
     stats,
     graph,
