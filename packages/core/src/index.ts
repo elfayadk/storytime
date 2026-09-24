@@ -38,3 +38,23 @@ export {
 export type { SerializedResult } from './util/serialize.js';
 export { createLogger } from './util/logger.js';
 export type { Logger, LogLevel } from './util/logger.js';
+export {
+  CONNECTORS,
+  getConnector,
+  runConnector,
+  reconTarget,
+  capabilityMatrix,
+  classifyOsintTarget,
+  sha256,
+  provenance,
+} from './connectors/index.js';
+export type {
+  Connector,
+  ConnectorInfo,
+  CollectResult,
+  CollectionTask,
+  RawItem,
+  Provenance,
+  Domain as OsintDomain,
+  AuthTier,
+} from './connectors/index.js';

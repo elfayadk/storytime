@@ -20,6 +20,9 @@ import { buildArcs } from '../src/processors/arcs.js';
 import { buildFacts } from '../src/processors/facts.js';
 import { loadConfig } from '../src/config.js';
 import { createLogger } from '../src/util/logger.js';
+import { classifyOsintTarget, sha256, provenance } from '../src/connectors/index.js';
+import { crtshConnector } from '../src/connectors/crtsh.js';
+import { internetdbConnector } from '../src/connectors/internetdb.js';
 import type { ClusterSummary, TimelineEvent, TimelineResult } from '../src/types.js';
 
 function ev(partial: Partial<TimelineEvent>): TimelineEvent {
@@ -244,6 +247,31 @@ test('buildFacts derives a works_on fact from a github push (no AI)', async () =
   assert.ok(f, 'expected a works_on fact');
   assert.equal(f!.object, 'alice/proj');
   assert.equal(f!.evidence[0].eventId, 'github:1');
+});
+
+test('classifyOsintTarget distinguishes domain, ip, url', () => {
+  assert.equal(classifyOsintTarget('github.com').kind, 'domain');
+  assert.equal(classifyOsintTarget('1.1.1.1').kind, 'ip');
+  assert.equal(classifyOsintTarget('https://example.com/x').kind, 'url');
+  assert.equal(classifyOsintTarget('a@b.com').kind, 'email');
+});
+
+test('provenance produces a stable sha256 envelope', () => {
+  assert.equal(sha256('hello'), sha256('hello'));
+  assert.notEqual(sha256('hello'), sha256('world'));
+  const p = provenance('crtsh', 'https://crt.sh/x', '{"a":1}', 'public');
+  assert.equal(p.connector, 'crtsh');
+  assert.equal(p.sha256.length, 64);
+  assert.ok(p.fetchedAt);
+});
+
+test('connectors declare correct applicability and metadata', () => {
+  assert.equal(crtshConnector.domain, 'infra');
+  assert.equal(crtshConnector.auth, 'none');
+  assert.ok(crtshConnector.applicable({ target: 'example.com' }));
+  assert.ok(!crtshConnector.applicable({ target: '1.1.1.1' }));
+  assert.ok(internetdbConnector.applicable({ target: '8.8.8.8' }));
+  assert.ok(!internetdbConnector.applicable({ target: 'example.com' }));
 });
 
 test('fingerprint produces a normalized style vector', () => {

@@ -10,6 +10,9 @@ import {
   OllamaClient,
   createEmbedder,
   rankBySimilarity,
+  capabilityMatrix,
+  runConnector,
+  reconTarget,
   createLogger,
   type Platform,
   type ExportFormat,
@@ -146,6 +149,39 @@ export function setupRoutes(app: Express, store: Store): void {
     } finally {
       clearInterval(heartbeat);
       res.end();
+    }
+  });
+
+  // ---- OSINT connector API (upgrade pack doc 06) ----
+  // Capability matrix: which connectors are reachable now.
+  app.get('/api/v2/sources', async (_req, res) => {
+    try {
+      res.json({ connectors: await capabilityMatrix(loadConfig().userAgent) });
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  // Run one connector against a target.
+  app.post('/api/v2/collect/:connectorId', async (req, res) => {
+    const target = String(req.body?.target ?? '').trim();
+    if (!target) return res.status(400).json({ error: 'target is required' });
+    try {
+      res.json(await runConnector(req.params.connectorId, { target, params: req.body?.params }, loadConfig().userAgent));
+    } catch (err) {
+      res.status(400).json({ error: (err as Error).message });
+    }
+  });
+
+  // Recon sweep: run every applicable connector against a domain/IP/URL.
+  app.post('/api/v2/recon', async (req, res) => {
+    const target = String(req.body?.target ?? '').trim();
+    if (!target) return res.status(400).json({ error: 'target is required' });
+    try {
+      const results = await reconTarget(target, loadConfig().userAgent);
+      res.json({ target, results });
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 

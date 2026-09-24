@@ -16,6 +16,7 @@ import { Compare } from './components/Compare';
 import { LivePanel } from './components/LivePanel';
 import { FactsPanel } from './components/FactsPanel';
 import { ArcsPanel } from './components/ArcsPanel';
+import { ReconView } from './components/ReconView';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
 import { bounds, filterByRange, recomputeStats, type DateRange } from './derive';
 import type { Progress, TimelineResult } from './types';
@@ -41,7 +42,7 @@ export default function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [result, setResult] = useState<TimelineResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<'single' | 'compare'>('single');
+  const [mode, setMode] = useState<'single' | 'compare' | 'recon'>('single');
   const [range, setRange] = useState<DateRange>({});
 
   const ranged = !!(range.from || range.to);
@@ -69,9 +70,14 @@ export default function App() {
     const [a, b] = c.split(',').map((s) => s.trim());
     return a && b ? { a, b } : null;
   }, [params]);
+  const reconInit = useMemo(() => params.get('recon'), [params]);
 
   useEffect(() => {
     getHealth().then(setHealth).catch(() => setHealth(null));
+    if (reconInit) {
+      setMode('recon');
+      return;
+    }
     if (compareInit) {
       setMode('compare');
       return;
@@ -115,6 +121,7 @@ export default function App() {
         <div className="modeswitch" style={{ marginRight: 10 }}>
           <button data-on={mode === 'single'} onClick={() => setMode('single')}>Trace</button>
           <button data-on={mode === 'compare'} onClick={() => setMode('compare')}>Compare</button>
+          <button data-on={mode === 'recon'} onClick={() => setMode('recon')}>Recon</button>
         </div>
         {health ? (
           <span className="tag hide-sm" style={{ marginRight: 4 }}>
@@ -127,7 +134,9 @@ export default function App() {
       </div>
 
       <div className="wrap">
-        {mode === 'compare' ? (
+        {mode === 'recon' ? (
+          <ReconView initialTarget={reconInit ?? undefined} />
+        ) : mode === 'compare' ? (
           <Compare aiAvailable={!!health?.ai.reachable} initialA={compareInit?.a} initialB={compareInit?.b} />
         ) : (
           <>

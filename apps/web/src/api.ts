@@ -96,6 +96,53 @@ export function exportUrl(id: string, fmt: string): string {
   return `/api/timelines/${id}/export.${fmt}`;
 }
 
+// ---- OSINT connectors (v2) ----
+export interface Provenance {
+  connector: string;
+  sourceUrl: string;
+  fetchedAt: string;
+  sha256: string;
+  licenseNote: string;
+  waybackUrl?: string;
+}
+export interface RawItem {
+  kind: string;
+  data: Record<string, unknown>;
+  provenance: Provenance;
+}
+export interface CollectResult {
+  connector: string;
+  domain: string;
+  target: string;
+  items: RawItem[];
+  provenance: Provenance;
+  warning?: string;
+}
+export interface ConnectorInfo {
+  id: string;
+  domain: string;
+  auth: string;
+  capabilities: string[];
+  rateLimit: { rps: number };
+  tosNote: string;
+  available: boolean;
+}
+
+export async function reconTarget(target: string): Promise<CollectResult[]> {
+  const res = await fetch('/api/v2/recon', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'recon failed');
+  return (await res.json()).results ?? [];
+}
+
+export async function getSources(): Promise<ConnectorInfo[]> {
+  const res = await fetch('/api/v2/sources');
+  return res.ok ? (await res.json()).connectors ?? [] : [];
+}
+
 /** Open a live Bluesky stream for a handle or #hashtag. Returns a stop function. */
 export function openLive(
   target: string,

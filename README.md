@@ -32,6 +32,11 @@ Storytime doesn't just aggregate - it *understands*. Every feature below runs
 locally and falls back cleanly, so it works with **zero setup** and gets sharper
 as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
 
+- **Infrastructure recon** (Recon mode) - point it at a domain or IP and it runs a
+  connector sweep on public data: subdomains from Certificate Transparency logs
+  (crt.sh), DNS-over-HTTPS records, Shodan InternetDB (open ports, CVEs, tags),
+  and Wayback Machine history. Every result carries a provenance envelope (source
+  URL, fetch time, sha256, license). See [RESPONSIBLE-USE.md](RESPONSIBLE-USE.md).
 - **Live streaming** - tail the Bluesky Jetstream firehose or public Nostr relays in real time for a handle or #hashtag; new matching posts append as they publish.
 - **Knowledge graph** - a local model (or rule-based signals) extracts bi-temporal facts (`who did what, when`) with valid-from/valid-to and evidence, so you can "time travel" and see what was true on any past date.
 - **Story arcs** - events cluster into themes over time, each arc dated and linked to its key moments.
@@ -126,8 +131,11 @@ graph) → optional AI narrative → export.
 - `POST /api/timeline` - build synchronously `{ target, platforms, limit, rss, pastebin, ai }`
 - `GET  /api/timelines` · `GET /api/timelines/:id` · `DELETE /api/timelines/:id`
 - `GET  /api/timelines/:id/export.{json|csv|md|xml|html}`
-- `GET  /api/timelines/:id/search?q=…` - semantic (vector) search over the timeline
+- `GET  /api/timelines/:id/search?q=…` - hybrid (BM25 + vector) search over the timeline
 - `POST /api/timelines/:id/ask` - `{ question }` → grounded local-RAG answer + sources
+- `GET  /api/v2/sources` - connector capability matrix (which sources are reachable now)
+- `POST /api/v2/collect/:connectorId` - `{ target }` → run one connector (crtsh, dns, internetdb, wayback)
+- `POST /api/v2/recon` - `{ target }` → run every applicable connector against a domain/IP
 
 ---
 
