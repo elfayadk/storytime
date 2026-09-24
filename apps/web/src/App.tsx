@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchBar } from './components/SearchBar';
 import { Dossier } from './components/Dossier';
 import { ProfileCard } from './components/ProfileCard';
@@ -11,7 +11,10 @@ import { Timeline } from './components/Timeline';
 import { MapPanel } from './components/MapPanel';
 import { Graph } from './components/Graph';
 import { HeroArt } from './components/HeroArt';
+import { DateFilter } from './components/DateFilter';
+import { Compare } from './components/Compare';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
+import { bounds, filterByRange, recomputeStats, type DateRange } from './derive';
 import type { Progress, TimelineResult } from './types';
 
 const FORMATS = ['md', 'json', 'csv', 'xml', 'html'];
@@ -35,6 +38,17 @@ export default function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [result, setResult] = useState<TimelineResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'single' | 'compare'>('single');
+  const [range, setRange] = useState<DateRange>({});
+
+  const ranged = !!(range.from || range.to);
+  const eventBounds = useMemo(() => (result ? bounds(result.events) : null), [result]);
+  const view = useMemo<TimelineResult | null>(() => {
+    if (!result) return null;
+    if (!range.from && !range.to) return result;
+    const events = filterByRange(result.events, range);
+    return { ...result, events, stats: recomputeStats(events, result.stats) };
+  }, [result, range]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -45,11 +59,29 @@ export default function App() {
     }
   }, [theme]);
 
+  const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const compareInit = useMemo(() => {
+    const c = params.get('compare');
+    if (!c) return null;
+    const [a, b] = c.split(',').map((s) => s.trim());
+    return a && b ? { a, b } : null;
+  }, [params]);
+
   useEffect(() => {
     getHealth().then(setHealth).catch(() => setHealth(null));
-    // Shareable deep link: /?q=torvalds auto-runs a trace on load.
-    const q = new URLSearchParams(window.location.search).get('q');
-    if (q) run({ target: q, platforms: ['github', 'mastodon', 'bluesky', 'hackernews'], limit: 50 });
+    if (compareInit) {
+      setMode('compare');
+      return;
+    }
+    // Shareable deep link: /?q=torvalds auto-runs a trace, with optional ?from=&to= range.
+    const q = params.get('q');
+    if (q) {
+      run({ target: q, platforms: ['github', 'mastodon', 'bluesky', 'hackernews'], limit: 50 }).then(() => {
+        const from = params.get('from') || undefined;
+        const to = params.get('to') || undefined;
+        if (from || to) setRange({ from, to });
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -57,6 +89,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setRange({});
     setProgress({ phase: 'ingest', message: 'Reaching out to public sources' });
     try {
       setResult(await buildTimeline(params, setProgress));
@@ -74,10 +107,14 @@ export default function App() {
         <span className="wordmark">
           Storytime<span className="dot">.</span>
         </span>
-        <span className="tag">public activity, one timeline</span>
+        <span className="tag hide-sm">public activity, one timeline</span>
         <span className="spacer" />
+        <div className="modeswitch" style={{ marginRight: 10 }}>
+          <button data-on={mode === 'single'} onClick={() => setMode('single')}>Trace</button>
+          <button data-on={mode === 'compare'} onClick={() => setMode('compare')}>Compare</button>
+        </div>
         {health ? (
-          <span className="tag" style={{ marginRight: 4 }}>
+          <span className="tag hide-sm" style={{ marginRight: 4 }}>
             {health.ai.reachable ? 'local AI ready' : `v${health.version}`}
           </span>
         ) : null}
@@ -87,94 +124,111 @@ export default function App() {
       </div>
 
       <div className="wrap">
-        {!result && !loading ? (
-          <section className="hero">
-            <div className="hero-copy">
-              <h1>
-                Trace anyone's <em>public</em> story across the open web.
-              </h1>
-              <p className="lede">
-                Give Storytime a username or handle. It gathers that account's public activity from
-                fifteen sources into a single timeline, then reads the patterns in it. No paid keys,
-                nothing to sign up for.
-              </p>
-              <SearchBar onSubmit={run} loading={loading} aiAvailable={!!health?.ai.reachable} />
-            </div>
-            <HeroArt />
-          </section>
+        {mode === 'compare' ? (
+          <Compare aiAvailable={!!health?.ai.reachable} initialA={compareInit?.a} initialB={compareInit?.b} />
         ) : (
-          <div style={{ padding: '20px 0 4px' }}>
-            <SearchBar onSubmit={run} loading={loading} aiAvailable={!!health?.ai.reachable} compact />
-          </div>
-        )}
-
-        {loading ? (
-          <div className="progress">
-            <div className="bar">
-              <span />
-            </div>
-            <div className="msg">{progress?.message ?? 'Working'}</div>
-          </div>
-        ) : null}
-
-        {error ? <div className="error" style={{ margin: '20px 0' }}>{error}</div> : null}
-
-        {result ? (
-          <div className="stack">
-            <Dossier result={result} />
-
-            {result.profile ? <ProfileCard profile={result.profile} /> : null}
-
-            {result.brief || result.narrative ? (
-              <section className="panel">
-                <h2 className="section-title">Brief</h2>
-                <p style={{ margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
-                  {result.brief ?? result.narrative}
-                </p>
+          <>
+            {!result && !loading ? (
+              <section className="hero">
+                <div className="hero-copy">
+                  <h1>
+                    Trace anyone's <em>public</em> story across the open web.
+                  </h1>
+                  <p className="lede">
+                    Give Storytime a username or handle. It gathers that account's public activity from
+                    fifteen sources into a single timeline, then reads the patterns in it. No paid keys,
+                    nothing to sign up for.
+                  </p>
+                  <SearchBar onSubmit={run} loading={loading} aiAvailable={!!health?.ai.reachable} />
+                </div>
+                <HeroArt />
               </section>
-            ) : null}
+            ) : (
+              <div style={{ padding: '20px 0 4px' }}>
+                <SearchBar onSubmit={run} loading={loading} aiAvailable={!!health?.ai.reachable} compact />
+              </div>
+            )}
 
-            <Signals result={result} />
-
-            {result.id ? (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                <a className="btn btn-primary" href={exportUrl(result.id, 'dossier')} target="_blank" rel="noopener" style={{ textDecoration: 'none' }}>
-                  Download dossier
-                </a>
-                <span className="tag" style={{ alignSelf: 'center', margin: '0 4px' }}>or raw data</span>
-                {FORMATS.map((f) => (
-                  <a key={f} className="pill" href={exportUrl(result.id!, f)} target="_blank" rel="noopener">
-                    {f}
-                  </a>
-                ))}
+            {loading ? (
+              <div className="progress">
+                <div className="bar">
+                  <span />
+                </div>
+                <div className="msg">{progress?.message ?? 'Working'}</div>
               </div>
             ) : null}
 
-            {result.id && result.stats.totalEvents > 0 ? <Explore timelineId={result.id} /> : null}
+            {error ? <div className="error" style={{ margin: '20px 0' }}>{error}</div> : null}
 
-            <Findings clusters={result.clusters} insights={result.insights} />
+            {view ? (
+              <div className="stack">
+                <Dossier result={view} />
 
-            {result.rhythm ? <Rhythm rhythm={result.rhythm} /> : null}
+                {view.profile ? <ProfileCard profile={view.profile} /> : null}
 
-            {result.stats.totalEvents > 0 ? <Trends stats={result.stats} /> : null}
+                {view.brief || view.narrative ? (
+                  <section className="panel">
+                    <h2 className="section-title">Brief</h2>
+                    <p style={{ margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
+                      {view.brief ?? view.narrative}
+                    </p>
+                  </section>
+                ) : null}
 
-            {result.graph ? (
-              <Graph nodes={result.graph.nodes} edges={result.graph.edges} subject={result.target} />
+                <Signals result={view} />
+
+                {eventBounds ? (
+                  <DateFilter
+                    range={range}
+                    bounds={eventBounds}
+                    onChange={setRange}
+                    filtered={view.events.length}
+                    total={result!.events.length}
+                  />
+                ) : null}
+
+                {view.id ? (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <a className="btn btn-primary" href={exportUrl(view.id, 'dossier')} target="_blank" rel="noopener" style={{ textDecoration: 'none' }}>
+                      Download dossier
+                    </a>
+                    <span className="tag" style={{ alignSelf: 'center', margin: '0 4px' }}>or raw data</span>
+                    {FORMATS.map((f) => (
+                      <a key={f} className="pill" href={exportUrl(view.id!, f)} target="_blank" rel="noopener">
+                        {f}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+
+                {view.id && view.stats.totalEvents > 0 ? <Explore timelineId={view.id} /> : null}
+
+                {/* Whole-account analytics: shown for the full trace, hidden while a date range narrows the view. */}
+                {!ranged ? <Findings clusters={view.clusters} insights={view.insights} /> : null}
+
+                {!ranged && view.rhythm ? <Rhythm rhythm={view.rhythm} /> : null}
+
+                {view.stats.totalEvents > 0 ? <Trends stats={view.stats} /> : null}
+
+                {!ranged && view.graph ? (
+                  <Graph nodes={view.graph.nodes} edges={view.graph.edges} subject={view.target} />
+                ) : null}
+
+                <MapPanel events={view.events} />
+
+                <Timeline events={view.events} />
+              </div>
             ) : null}
 
-            <MapPanel events={result.events} />
-
-            <Timeline events={result.events} />
-          </div>
-        ) : null}
-
-        {!result && !loading && !error ? (
-          <div className="center-note" style={{ paddingTop: 20 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12.5 }}>
-              try torvalds, Gargron@mastodon.social, or bsky.app
-            </span>
-          </div>
-        ) : null}
+            {!result && !loading && !error ? (
+              <div className="center-note" style={{ paddingTop: 20 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 12.5 }}>
+                  try torvalds, Gargron@mastodon.social, or bsky.app
+                </span>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </>
   );

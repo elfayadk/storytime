@@ -8,6 +8,8 @@ export interface BuildParams {
   pastebin?: string;
   mastodonInstance?: string;
   ai?: boolean;
+  since?: string;
+  until?: string;
 }
 
 export interface Health {
@@ -39,6 +41,8 @@ export function buildTimeline(
   if (params.pastebin) qs.set('pastebin', params.pastebin);
   if (params.mastodonInstance) qs.set('mastodonInstance', params.mastodonInstance);
   if (params.ai) qs.set('ai', 'true');
+  if (params.since) qs.set('since', params.since);
+  if (params.until) qs.set('until', params.until);
 
   return new Promise((resolve, reject) => {
     const es = new EventSource(`/api/timeline/stream?${qs.toString()}`);
@@ -57,6 +61,22 @@ export function buildTimeline(
       es.close();
     });
   });
+}
+
+/** Build synchronously (no progress stream). Used by the comparison view. */
+export async function buildTimelineSync(params: BuildParams): Promise<TimelineResult> {
+  const res = await fetch('/api/timeline', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      target: params.target,
+      platforms: params.platforms,
+      limit: params.limit,
+      ai: params.ai,
+    }),
+  });
+  if (!res.ok) throw new Error(`build failed for ${params.target}`);
+  return res.json();
 }
 
 export async function listTimelines(): Promise<
