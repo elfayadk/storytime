@@ -7,6 +7,8 @@ import { computeStats } from './processors/stats.js';
 import { buildNetwork } from './processors/network.js';
 import { detectAnomalies } from './processors/anomaly.js';
 import { computeRhythm } from './processors/rhythm.js';
+import { buildFacts } from './processors/facts.js';
+import { buildArcs } from './processors/arcs.js';
 import { collectProfile, discoverFeed } from './processors/profile.js';
 import { OllamaClient } from './ai/ollama.js';
 import type { Platform, TimelineEvent, TimelineResult } from './types.js';
@@ -91,6 +93,10 @@ export async function buildTimeline(
   const graph = buildNetwork(events);
   const insights = detectAnomalies(events);
   const rhythm = computeRhythm(events);
+  const arcs = buildArcs(events, clusters);
+  const aiEnabled = options.enrich?.ai ?? config.ai.enabled;
+  progress({ phase: 'analyze', message: 'Extracting facts (knowledge graph)' });
+  const facts = await buildFacts(events, config, logger, aiEnabled);
 
   // 4. Optional AI narrative + written dossier brief over the whole timeline.
   let narrative: string | undefined;
@@ -109,6 +115,8 @@ export async function buildTimeline(
     target,
     generatedAt: DateTime.now().toISO()!,
     profile,
+    facts,
+    arcs,
     brief,
     events,
     stats,

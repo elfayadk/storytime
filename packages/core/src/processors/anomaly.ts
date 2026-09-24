@@ -1,14 +1,17 @@
 /**
- * Temporal anomaly detection over a timeline: activity bursts (z-score on daily
- * volume) and sentiment change-points. Deterministic, no ML. Surfaces the
- * "something happened here" moments a flat feed hides.
+ * Temporal anomaly detection: activity regime changes (Bayesian online
+ * change-point detection over a dense daily series), single-day spikes, and
+ * sentiment change-points. Deterministic, no ML.
  */
+import { DateTime } from 'luxon';
+import { bocpd } from './bocpd.js';
 import type { Insight, TimelineEvent } from '../types.js';
 export type { Insight };
 
 export function detectAnomalies(events: TimelineEvent[]): Insight[] {
   if (events.length < 6) return [];
   const insights: Insight[] = [];
+  const seenDates = new Set<string>();
 
   // Group by ISO day.
   const days = new Map<string, TimelineEvent[]>();
@@ -18,20 +21,48 @@ export function detectAnomalies(events: TimelineEvent[]): Insight[] {
     (days.get(d) ?? days.set(d, []).get(d)!).push(e);
   }
   const dayKeys = [...days.keys()].sort();
-  const counts = dayKeys.map((d) => days.get(d)!.length);
+  if (dayKeys.length < 2) return [];
 
-  // Volume bursts via z-score.
-  const mean = avg(counts);
-  const sd = stddev(counts, mean);
+  // Dense daily counts from first to last active day (fill gaps with 0).
+  const start = DateTime.fromISO(dayKeys[0]);
+  const end = DateTime.fromISO(dayKeys[dayKeys.length - 1]);
+  const span = Math.min(Math.round(end.diff(start, 'days').days) + 1, 730);
+  const denseDates: string[] = [];
+  const denseCounts: number[] = [];
+  for (let i = 0; i < span; i++) {
+    const d = start.plus({ days: i }).toISODate()!;
+    denseDates.push(d);
+    denseCounts.push(days.get(d)?.length ?? 0);
+  }
+  const baseline = denseCounts.reduce((a, b) => a + b, 0) / denseCounts.length;
+
+  // BOCPD regime changes.
+  for (const cp of bocpd(denseCounts)) {
+    const date = denseDates[Math.min(cp.index, denseDates.length - 1)];
+    if (!date || seenDates.has(date)) continue;
+    seenDates.add(date);
+    const c = denseCounts[cp.index] ?? 0;
+    insights.push({
+      type: 'burst',
+      date,
+      score: cp.confidence,
+      detail: `Activity shifted around this day (${c} events vs a ${baseline.toFixed(1)}/day baseline, ${(cp.confidence * 100).toFixed(0)}% confidence)`,
+    });
+  }
+
+  // Single-day spikes the change-point model may smooth over.
+  const mean = avg(denseCounts);
+  const sd = stddev(denseCounts, mean);
   if (sd > 0) {
-    dayKeys.forEach((d, i) => {
-      const z = (counts[i] - mean) / sd;
-      if (z >= 2 && counts[i] >= 3) {
+    denseDates.forEach((d, i) => {
+      const z = (denseCounts[i] - mean) / sd;
+      if (z >= 2.0 && denseCounts[i] >= 3 && !seenDates.has(d)) {
+        seenDates.add(d);
         insights.push({
           type: 'burst',
           date: d,
           score: Number(z.toFixed(2)),
-          detail: `Activity burst: ${counts[i]} events (${z.toFixed(1)}σ above the ${mean.toFixed(1)}/day baseline)`,
+          detail: `Activity spike: ${denseCounts[i]} events (${z.toFixed(1)} sigma above the ${mean.toFixed(1)}/day baseline)`,
         });
       }
     });
@@ -52,7 +83,7 @@ export function detectAnomalies(events: TimelineEvent[]): Insight[] {
         type: 'sentiment_shift',
         date: dayKeys[i],
         score: Number(delta.toFixed(2)),
-        detail: `Mood ${delta > 0 ? 'lifted' : 'dropped'} sharply (${prev.toFixed(2)} → ${cur.toFixed(2)})`,
+        detail: `Mood ${delta > 0 ? 'lifted' : 'dropped'} sharply (${prev.toFixed(2)} to ${cur.toFixed(2)})`,
       });
     }
   }

@@ -4,6 +4,7 @@ import type { SerializedEvent } from '../types';
 
 export function LivePanel({ initialTarget }: { initialTarget: string }) {
   const [target, setTarget] = useState(initialTarget);
+  const [source, setSource] = useState<'bluesky' | 'nostr'>('bluesky');
   const [live, setLive] = useState(false);
   const [status, setStatus] = useState<string>('idle');
   const [events, setEvents] = useState<SerializedEvent[]>([]);
@@ -30,6 +31,7 @@ export function LivePanel({ initialTarget }: { initialTarget: string }) {
         setCount((c) => c + 1);
       },
       setStatus,
+      source,
     );
   };
 
@@ -53,6 +55,16 @@ export function LivePanel({ initialTarget }: { initialTarget: string }) {
           {live ? 'Stop' : 'Go live'}
         </button>
       </div>
+      {!live ? (
+        <div className="pills" style={{ marginTop: 10 }}>
+          <button className="pill" data-on={source === 'bluesky'} onClick={() => setSource('bluesky')}>
+            <span className="dotmark" /> Bluesky
+          </button>
+          <button className="pill" data-on={source === 'nostr'} onClick={() => setSource('nostr')}>
+            <span className="dotmark" /> Nostr (hashtags)
+          </button>
+        </div>
+      ) : null}
 
       {live ? (
         <div>

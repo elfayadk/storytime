@@ -390,6 +390,19 @@ a { color: inherit; }
 .finding .body { font-size: 13.5px; }
 .finding .body b { font-weight: 600; }
 
+/* ---- story arcs ----------------------------------------------------------- */
+.arc { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.arc:last-child { border-bottom: 0; }
+.arc-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.arc-label { font-family: var(--serif); font-weight: 600; font-size: 16px; }
+.arc-span { color: var(--muted); font-family: var(--mono); font-size: 11.5px; }
+.arc-narr { color: var(--text); margin: 6px 0; }
+.arc-moments { display: flex; flex-direction: column; gap: 5px; margin-top: 9px; padding-left: 12px; border-left: 1px solid var(--line-strong); }
+.arc-moment { display: flex; gap: 10px; text-decoration: none; align-items: baseline; }
+.arc-moment:hover .arc-title { color: var(--signal); }
+.arc-date { font-family: var(--mono); font-size: 11px; color: var(--faint); min-width: 96px; flex: none; }
+.arc-title { color: var(--text); font-size: 13.5px; }
+
 /* ---- semantic explore ----------------------------------------------------- */
 .tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
 .tabs button {

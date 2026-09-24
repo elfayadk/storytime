@@ -3,6 +3,7 @@ import type { Logger } from '../util/logger.js';
 import type { ClusterSummary, TimelineEvent } from '../types.js';
 import { analyzeSentiment } from './sentiment.js';
 import { extractEntities } from './entities.js';
+import { detectLang } from '../util/lang.js';
 import { assignTopics } from './topics.js';
 import { geocodeEvents } from './geo.js';
 import { fuseCrossPosts } from './dedup.js';
@@ -73,6 +74,7 @@ export async function enrich(
     const text = `${e.title}\n${e.content}`;
     if (flags.entities) e.entities = extractEntities(text);
     if (flags.sentiment) e.sentiment = analyzeSentiment(text);
+    if (!e.language) e.language = detectLang(text).lang;
   }
 
   let topTopics: { topic: string; count: number }[] = [];

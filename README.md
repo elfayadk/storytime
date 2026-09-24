@@ -32,7 +32,10 @@ Storytime doesn't just aggregate - it *understands*. Every feature below runs
 locally and falls back cleanly, so it works with **zero setup** and gets sharper
 as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
 
-- **Live streaming** - tail the Bluesky Jetstream firehose in real time for a handle or #hashtag; new matching posts append as they publish.
+- **Live streaming** - tail the Bluesky Jetstream firehose or public Nostr relays in real time for a handle or #hashtag; new matching posts append as they publish.
+- **Knowledge graph** - a local model (or rule-based signals) extracts bi-temporal facts (`who did what, when`) with valid-from/valid-to and evidence, so you can "time travel" and see what was true on any past date.
+- **Story arcs** - events cluster into themes over time, each arc dated and linked to its key moments.
+- **Hybrid search** - BM25 keyword (FTS5) + vector + reciprocal rank fusion for sharper retrieval; plus change-point detection (BOCPD) and coordination detection, and multilingual embeddings (Arabic and mixed-language, RTL-aware).
 - **Semantic search** - query events by *meaning*, not keywords (`?q=performance`
   finds "made it 3x faster" even without the word).
 - **Ask-your-timeline (local RAG)** - ask a question; get an answer grounded in

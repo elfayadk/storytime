@@ -43,9 +43,36 @@ export interface SerializedEvent {
   entities?: Entity[];
   topics?: string[];
   summary?: string;
+  language?: string;
   location?: GeoLocation;
   metrics?: Record<string, number | undefined>;
   metadata: Record<string, unknown>;
+}
+export interface Fact {
+  id: string;
+  subject: string;
+  subjectKind: string;
+  predicate: string;
+  object?: string;
+  objectKind?: string;
+  validFrom: string;
+  validTo?: string;
+  ingestedAt: string;
+  confidence: number;
+  stance: string;
+  extractor: string;
+  evidence: { eventId: string; url: string; quote?: string }[];
+  invalidatedAt?: string;
+}
+export interface StoryArc {
+  id: number;
+  label: string;
+  from: string;
+  to: string;
+  size: number;
+  eventIds: string[];
+  narrative?: string;
+  keyMoments: { date: string; title: string; url: string }[];
 }
 export interface Stats {
   totalEvents: number;
@@ -103,6 +130,8 @@ export interface TimelineResult {
   target: string;
   generatedAt: string;
   profile?: Profile;
+  facts?: Fact[];
+  arcs?: StoryArc[];
   brief?: string;
   events: SerializedEvent[];
   stats: Stats;

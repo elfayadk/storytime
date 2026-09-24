@@ -13,7 +13,14 @@ import { simhash, hammingDistance, fuseCrossPosts } from '../src/processors/dedu
 import { detectAnomalies } from '../src/processors/anomaly.js';
 import { fingerprint } from '../src/processors/stylometry.js';
 import { computeRhythm } from '../src/processors/rhythm.js';
-import type { TimelineEvent, TimelineResult } from '../src/types.js';
+import { bocpd } from '../src/processors/bocpd.js';
+import { coordination, type Action } from '../src/processors/coordination.js';
+import { detectLang } from '../src/util/lang.js';
+import { buildArcs } from '../src/processors/arcs.js';
+import { buildFacts } from '../src/processors/facts.js';
+import { loadConfig } from '../src/config.js';
+import { createLogger } from '../src/util/logger.js';
+import type { ClusterSummary, TimelineEvent, TimelineResult } from '../src/types.js';
 
 function ev(partial: Partial<TimelineEvent>): TimelineEvent {
   return {
@@ -185,6 +192,58 @@ test('computeRhythm builds a 7x24 grid and finds the peak hour', () => {
   assert.equal(r.peakHour, 15);
   assert.equal(r.total, 6);
   assert.equal(r.byHour[15], 5);
+});
+
+test('bocpd finds a change point when the activity regime shifts', () => {
+  // 20 days at ~1/day, then 20 days at ~10/day.
+  const counts = [...Array(20).fill(1), ...Array(20).fill(10)];
+  const cps = bocpd(counts);
+  assert.ok(cps.length > 0);
+  assert.ok(cps.some((c) => c.index >= 18 && c.index <= 25), `change points at ${cps.map((c) => c.index)}`);
+});
+
+test('coordination clusters accounts that repeatedly co-share a key', () => {
+  const actions: Action[] = [];
+  const url = 'http://x/1';
+  // three accounts post the same url within 10s, repeated 4 times
+  for (let round = 0; round < 4; round++) {
+    const base = round * 100000;
+    for (const author of ['a', 'b', 'c']) actions.push({ author, key: url, ts: base + Math.random() * 5000 });
+  }
+  // plus noise from many other authors on other keys
+  for (let i = 0; i < 20; i++) actions.push({ author: `n${i}`, key: `k${i}`, ts: i * 1000 });
+  const clusters = coordination(actions, 60000, 3, 0.9);
+  assert.ok(clusters.some((c) => c.size >= 3 && c.members.includes('a') && c.members.includes('b')));
+});
+
+test('detectLang flags Arabic as RTL and English as LTR', () => {
+  assert.deepEqual(detectLang('مرحبا بالعالم هذا اختبار'), { lang: 'ar', rtl: true });
+  assert.equal(detectLang('hello world this is a test').rtl, false);
+});
+
+test('buildArcs turns a cluster into a dated arc', () => {
+  const events: TimelineEvent[] = [
+    ev({ id: 'a', timestamp: DateTime.fromISO('2026-01-01T12:00:00Z', { zone: 'utc' }) }),
+    ev({ id: 'b', timestamp: DateTime.fromISO('2026-01-05T12:00:00Z', { zone: 'utc' }) }),
+    ev({ id: 'c', timestamp: DateTime.fromISO('2026-01-10T12:00:00Z', { zone: 'utc' }) }),
+  ];
+  const clusters: ClusterSummary[] = [{ id: 0, label: 'rust migration', size: 3, keywords: ['rust'], eventIds: ['a', 'b', 'c'] }];
+  const arcs = buildArcs(events, clusters);
+  assert.equal(arcs.length, 1);
+  assert.equal(arcs[0].from, '2026-01-01');
+  assert.equal(arcs[0].to, '2026-01-10');
+  assert.ok(arcs[0].keyMoments.length >= 2);
+});
+
+test('buildFacts derives a works_on fact from a github push (no AI)', async () => {
+  const events: TimelineEvent[] = [
+    ev({ id: 'github:1', platform: 'github', category: 'code_push', username: 'alice', metadata: { repo: 'alice/proj' } }),
+  ];
+  const facts = await buildFacts(events, loadConfig(), createLogger('silent'), false);
+  const f = facts.find((x) => x.predicate === 'works_on');
+  assert.ok(f, 'expected a works_on fact');
+  assert.equal(f!.object, 'alice/proj');
+  assert.equal(f!.evidence[0].eventId, 'github:1');
 });
 
 test('fingerprint produces a normalized style vector', () => {

@@ -48,7 +48,20 @@ export class Store {
       );
       CREATE INDEX IF NOT EXISTS idx_vectors_timeline ON event_vectors(timeline_id);
     `);
+    // Full-text keyword index (BM25). unicode61 + remove_diacritics works for Arabic too.
+    try {
+      this.db.exec(`
+        CREATE VIRTUAL TABLE IF NOT EXISTS events_fts USING fts5(
+          event_id UNINDEXED, timeline_id UNINDEXED, title, content,
+          tokenize='unicode61 remove_diacritics 2'
+        );`);
+      this.fts = true;
+    } catch {
+      this.fts = false;
+    }
   }
+
+  private fts = false;
 
   save(
     result: SerializedResult,
@@ -82,6 +95,16 @@ export class Store {
         }
       });
       tx(Object.entries(embeddings));
+    }
+
+    if (this.fts) {
+      const insFts = this.db.prepare(
+        'INSERT INTO events_fts (event_id, timeline_id, title, content) VALUES (?, ?, ?, ?)',
+      );
+      const tx = this.db.transaction(() => {
+        for (const e of result.events) insFts.run(e.id, id, e.title ?? '', e.content ?? '');
+      });
+      tx();
     }
 
     return {
@@ -126,8 +149,32 @@ export class Store {
     }));
   }
 
+  /** BM25 keyword search over a timeline's events. Returns ranked event ids. */
+  ftsSearch(timelineId: string, query: string, limit = 50): string[] {
+    if (!this.fts) return [];
+    const match = query
+      .split(/\s+/)
+      .map((t) => t.replace(/["^*():]/g, '').trim())
+      .filter(Boolean)
+      .map((t) => `"${t}"`)
+      .join(' OR ');
+    if (!match) return [];
+    try {
+      const rows = this.db
+        .prepare(
+          `SELECT event_id FROM events_fts WHERE events_fts MATCH ? AND timeline_id = ?
+           ORDER BY bm25(events_fts) LIMIT ?`,
+        )
+        .all(match, timelineId, limit) as { event_id: string }[];
+      return rows.map((r) => r.event_id);
+    } catch {
+      return [];
+    }
+  }
+
   delete(id: string): boolean {
     this.db.prepare('DELETE FROM event_vectors WHERE timeline_id = ?').run(id);
+    if (this.fts) this.db.prepare('DELETE FROM events_fts WHERE timeline_id = ?').run(id);
     return this.db.prepare('DELETE FROM timelines WHERE id = ?').run(id).changes > 0;
   }
 }

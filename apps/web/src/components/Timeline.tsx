@@ -47,14 +47,14 @@ export function Timeline({ events }: { events: SerializedEvent[] }) {
                   <span className="entry-time">{fmtTime(e.timestamp)}</span>
                   <span className="entry-plat">{PLATFORM_META[e.platform].label}</span>
                 </div>
-                <h3 className="entry-title">
+                <h3 className="entry-title" dir="auto">
                   <a href={e.url} target="_blank" rel="noopener">
                     {e.title}
                   </a>
                 </h3>
-                {e.summary ? <p className="entry-sum">{e.summary}</p> : null}
+                {e.summary ? <p className="entry-sum" dir="auto">{e.summary}</p> : null}
                 {e.content ? (
-                  <p className="entry-body">
+                  <p className="entry-body" dir="auto">
                     {e.content.slice(0, 320)}
                     {e.content.length > 320 ? '...' : ''}
                   </p>

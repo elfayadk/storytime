@@ -19,6 +19,7 @@ import {
 } from '@storytime/core';
 import type { Store } from './db.js';
 import { streamBluesky } from './jetstream.js';
+import { streamNostr } from './nostr.js';
 
 const CONTENT_TYPE: Record<string, string> = {
   json: 'application/json',
@@ -134,8 +135,10 @@ export function setupRoutes(app: Express, store: Store): void {
       ctrl.abort();
       clearInterval(heartbeat);
     });
+    const source = String(req.query.source ?? 'bluesky');
+    const stream = source === 'nostr' ? streamNostr(target, ctrl.signal) : streamBluesky(target, ctrl.signal);
     try {
-      for await (const ev of streamBluesky(target, ctrl.signal)) {
+      for await (const ev of stream) {
         res.write(`event: event.added\ndata: ${JSON.stringify(ev)}\n\n`);
       }
     } catch (err) {
@@ -216,6 +219,10 @@ export function setupRoutes(app: Express, store: Store): void {
 }
 
 /** Embed the query with the timeline's provider and rank events by cosine. */
+/**
+ * Hybrid retrieval: fuse BM25 keyword search (FTS5) and vector KNN with
+ * reciprocal rank fusion (RRF, k=60). Either retriever alone still works.
+ */
 async function semanticSearch(
   store: Store,
   id: string,
@@ -224,19 +231,34 @@ async function semanticSearch(
 ): Promise<{ score: number; event: SerializedEvent }[] | null> {
   const row = store.get(id);
   if (!row) return null;
-  const vectors = store.getVectors(id);
-  if (vectors.length === 0) return [];
-
-  const cfg = loadConfig();
-  const embedder = await createEmbedder(cfg, createLogger('silent'), row.embedding_provider as EmbedProvider | undefined);
-  if (row.embedding_dim && embedder.dimension !== row.embedding_dim) {
-    // Provider changed since indexing; can't compare across dimensions.
-    return [];
-  }
-  const [qVec] = await embedder.embed([query]);
-  const ranked = rankBySimilarity(qVec, vectors.map((v) => v.vec), k);
   const byId = new Map(row.data.events.map((e) => [e.id, e]));
-  return ranked
-    .map((r) => ({ score: Number(r.score.toFixed(4)), event: byId.get(vectors[r.index].eventId)! }))
+
+  // 1. keyword ranking (FTS5 BM25)
+  const keywordIds = store.ftsSearch(id, query, 50);
+
+  // 2. vector ranking (cosine KNN)
+  let vectorIds: string[] = [];
+  const vectors = store.getVectors(id);
+  if (vectors.length) {
+    const cfg = loadConfig();
+    const embedder = await createEmbedder(cfg, createLogger('silent'), row.embedding_provider as EmbedProvider | undefined);
+    if (!row.embedding_dim || embedder.dimension === row.embedding_dim) {
+      const [qVec] = await embedder.embed([query]);
+      vectorIds = rankBySimilarity(qVec, vectors.map((v) => v.vec), 50).map((r) => vectors[r.index].eventId);
+    }
+  }
+
+  // 3. reciprocal rank fusion
+  const RRF_K = 60;
+  const fused = new Map<string, number>();
+  for (const list of [keywordIds, vectorIds]) {
+    list.forEach((eid, i) => fused.set(eid, (fused.get(eid) ?? 0) + 1 / (RRF_K + i + 1)));
+  }
+  if (fused.size === 0) return [];
+
+  return [...fused.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, k)
+    .map(([eid, score]) => ({ score: Number(score.toFixed(4)), event: byId.get(eid)! }))
     .filter((r) => r.event);
 }

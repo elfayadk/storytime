@@ -84,7 +84,7 @@ async function tryTransformers(logger: Logger): Promise<Embedder | null> {
     const spec = '@huggingface/transformers';
     const mod: any = await import(spec).catch(() => null);
     if (!mod?.pipeline) return null;
-    const model = process.env.TRANSFORMERS_EMBED_MODEL || 'Xenova/all-MiniLM-L6-v2';
+    const model = process.env.TRANSFORMERS_EMBED_MODEL || 'Xenova/multilingual-e5-small';
     const extractor = await mod.pipeline('feature-extraction', model);
     logger.info(`embeddings: transformers.js/${model} (384d)`);
     return {
@@ -115,10 +115,26 @@ export function hashedEmbedder(dim = HASH_DIM): Embedder {
   };
 }
 
-/** Feature-hashing bag-of-words: signed hashed token counts, L2-normalized. */
+/** Multilingual word tokenization via Intl.Segmenter, with a regex fallback. */
+function tokenizeMultilingual(text: string): string[] {
+  const lower = text.toLowerCase();
+  try {
+    const seg = new Intl.Segmenter(undefined, { granularity: 'word' });
+    const out: string[] = [];
+    for (const s of seg.segment(lower)) {
+      if ((s as { isWordLike?: boolean }).isWordLike && s.segment.trim()) out.push(s.segment.trim());
+    }
+    if (out.length) return out.slice(0, 400);
+  } catch {
+    /* Intl.Segmenter unavailable */
+  }
+  return (lower.match(/[\p{L}\p{N}]{2,}/gu) ?? []).slice(0, 400);
+}
+
+/** Feature-hashing bag-of-words: signed hashed token counts, L2-normalized. Any script. */
 export function hashEmbed(text: string, dim = HASH_DIM): Float32Array {
   const v = new Float32Array(dim);
-  const tokens = (text.toLowerCase().match(/[a-z0-9]{2,}/g) ?? []).slice(0, 400);
+  const tokens = tokenizeMultilingual(text);
   for (const tok of tokens) {
     const h = fnv1a(tok);
     const idx = h % dim;

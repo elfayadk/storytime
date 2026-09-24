@@ -14,6 +14,8 @@ import { HeroArt } from './components/HeroArt';
 import { DateFilter } from './components/DateFilter';
 import { Compare } from './components/Compare';
 import { LivePanel } from './components/LivePanel';
+import { FactsPanel } from './components/FactsPanel';
+import { ArcsPanel } from './components/ArcsPanel';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
 import { bounds, filterByRange, recomputeStats, type DateRange } from './derive';
 import type { Progress, TimelineResult } from './types';
@@ -208,6 +210,10 @@ export default function App() {
 
                 {/* Whole-account analytics: shown for the full trace, hidden while a date range narrows the view. */}
                 {!ranged ? <Findings clusters={view.clusters} insights={view.insights} /> : null}
+
+                {!ranged && view.facts && view.facts.length > 0 ? <FactsPanel facts={view.facts} /> : null}
+
+                {!ranged && view.arcs && view.arcs.length > 0 ? <ArcsPanel arcs={view.arcs} /> : null}
 
                 {!ranged && view.rhythm ? <Rhythm rhythm={view.rhythm} /> : null}
 

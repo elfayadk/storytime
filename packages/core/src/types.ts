@@ -226,11 +226,47 @@ export interface Profile {
   topRepos?: { name: string; url: string; stars: number; description?: string; language?: string }[];
 }
 
+/** A bi-temporal fact extracted from events: what was true, when, and from where. */
+export interface Fact {
+  id: string;
+  subject: string;
+  subjectKind: 'person' | 'org' | 'project' | 'place' | 'topic';
+  predicate: string;
+  object?: string;
+  objectKind?: string;
+  /** Valid time: when it was true in the world. */
+  validFrom: string;
+  validTo?: string;
+  /** Transaction time: when Storytime learned it. */
+  ingestedAt: string;
+  confidence: number;
+  stance: 'asserted' | 'reported' | 'questioned' | 'denied';
+  extractor: string; // 'rule' | 'ollama:<model>'
+  evidence: { eventId: string; url: string; quote?: string }[];
+  invalidatedAt?: string;
+}
+
+/** A story arc: a theme unfolding over time, grouping related events. */
+export interface StoryArc {
+  id: number;
+  label: string;
+  from: string;
+  to: string;
+  size: number;
+  eventIds: string[];
+  narrative?: string;
+  keyMoments: { date: string; title: string; url: string }[];
+}
+
 export interface TimelineResult {
   target: string;
   generatedAt: string;
   /** Subject profile card, when resolvable. */
   profile?: Profile;
+  /** Bi-temporal facts extracted from the events. */
+  facts?: Fact[];
+  /** Story arcs (themes over time). */
+  arcs?: StoryArc[];
   /** AI-written intelligence brief (Ollama), when enabled and reachable. */
   brief?: string;
   events: TimelineEvent[];

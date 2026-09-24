@@ -101,8 +101,9 @@ export function openLive(
   target: string,
   onEvent: (e: import('./types').SerializedEvent) => void,
   onStatus?: (state: string) => void,
+  source: 'bluesky' | 'nostr' = 'bluesky',
 ): () => void {
-  const es = new EventSource(`/api/live?target=${encodeURIComponent(target)}`);
+  const es = new EventSource(`/api/live?target=${encodeURIComponent(target)}&source=${source}`);
   es.addEventListener('event.added', (e) => onEvent(JSON.parse((e as MessageEvent).data)));
   es.addEventListener('status', (e) => onStatus?.(JSON.parse((e as MessageEvent).data).state));
   es.addEventListener('error', () => onStatus?.('reconnecting'));
