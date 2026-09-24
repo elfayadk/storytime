@@ -3,8 +3,25 @@ import { crtshConnector } from './crtsh.js';
 import { internetdbConnector } from './internetdb.js';
 import { waybackConnector } from './wayback.js';
 import { dnsConnector } from './dns.js';
+import { gdeltConnector } from './gdelt.js';
+import { openalexConnector } from './openalex.js';
+import { opensanctionsConnector } from './opensanctions.js';
+import { courtlistenerConnector } from './courtlistener.js';
+import { gleifConnector } from './gleif.js';
+import { secConnector } from './sec.js';
 
-export const CONNECTORS: Connector[] = [crtshConnector, dnsConnector, internetdbConnector, waybackConnector];
+export const CONNECTORS: Connector[] = [
+  crtshConnector,
+  dnsConnector,
+  internetdbConnector,
+  waybackConnector,
+  opensanctionsConnector,
+  gleifConnector,
+  secConnector,
+  courtlistenerConnector,
+  gdeltConnector,
+  openalexConnector,
+];
 
 export function getConnector(id: string): Connector | undefined {
   return CONNECTORS.find((c) => c.id === id);
@@ -62,9 +79,14 @@ export function corroborate(results: CollectResult[]): Corroboration[] {
   for (const r of results) {
     for (const it of r.items) {
       const d = it.data as Record<string, unknown>;
+      // infrastructure identifiers
       if (typeof d.host === 'string') note(d.host, r.connector);
       if (typeof d.value === 'string' && it.kind === 'dns_record' && (d.type === 'A' || d.type === 'AAAA')) note(d.value, r.connector);
       for (const h of (d.hostnames as string[] | undefined) ?? []) note(h, r.connector);
+      // entity names across records sources
+      if (typeof d.caption === 'string') note(d.caption, r.connector);
+      if (typeof d.legalName === 'string') note(d.legalName, r.connector);
+      if (typeof d.filer === 'string') note(d.filer, r.connector);
     }
   }
   return [...byValue.entries()]

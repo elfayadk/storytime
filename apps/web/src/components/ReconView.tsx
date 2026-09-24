@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, type Provenance, type RawItem, type ReconResponse } from '../api';
 
-const TIER: Record<string, string> = { crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive' };
+const TIER: Record<string, string> = {
+  crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive',
+  opensanctions: 'primary', gleif: 'primary', sec: 'primary', courtlistener: 'primary', gdelt: 'aggregator', openalex: 'primary',
+};
 
 async function downloadBundle(target: string) {
   const res = await fetch(reconBundleUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target }) });
@@ -120,6 +123,15 @@ function renderItems(r: CollectResult) {
       </div>
     );
   }
+  if (['opensanctions', 'gleif', 'sec', 'courtlistener', 'gdelt', 'openalex'].includes(r.connector)) {
+    return (
+      <div className="records">
+        {r.items.slice(0, 40).map((it, i) => (
+          <RecordRow key={i} connector={r.connector} d={it.data as any} />
+        ))}
+      </div>
+    );
+  }
   // crtsh subdomains, and any generic list
   return (
     <div className="chips">
@@ -128,6 +140,43 @@ function renderItems(r: CollectResult) {
           {String((it.data as any).host ?? JSON.stringify(it.data).slice(0, 40))}
         </span>
       ))}
+    </div>
+  );
+}
+
+function RecordRow({ connector, d }: { connector: string; d: any }) {
+  let title = '';
+  let meta = '';
+  let url: string | undefined = d.url;
+  if (connector === 'opensanctions') {
+    title = d.caption;
+    meta = [d.schema, (d.topics ?? []).join(', '), (d.countries ?? []).join(', ')].filter(Boolean).join(' - ');
+  } else if (connector === 'gleif') {
+    title = d.legalName ?? d.lei;
+    meta = [d.lei, d.city, d.country, d.status].filter(Boolean).join(' - ');
+  } else if (connector === 'sec') {
+    title = d.filer ?? 'Filing';
+    meta = [d.form, d.fileDate].filter(Boolean).join(' - ');
+  } else if (connector === 'courtlistener') {
+    title = d.caseName ?? 'Opinion';
+    meta = [d.court, d.dateFiled, d.docketNumber].filter(Boolean).join(' - ');
+  } else if (connector === 'gdelt') {
+    title = d.title;
+    meta = [d.domain, d.country, d.language].filter(Boolean).join(' - ');
+  } else if (connector === 'openalex') {
+    title = d.title;
+    meta = [d.year, (d.authors ?? []).slice(0, 3).join(', '), d.citedBy != null ? `${d.citedBy} citations` : ''].filter(Boolean).join(' - ');
+  }
+  return (
+    <div className="record">
+      {url ? (
+        <a className="rec-title" href={url} target="_blank" rel="noopener" dir="auto">
+          {title || url}
+        </a>
+      ) : (
+        <span className="rec-title" dir="auto">{title}</span>
+      )}
+      {meta ? <span className="rec-meta">{meta}</span> : null}
     </div>
   );
 }
@@ -149,7 +198,10 @@ function Field({ label, values, tone }: { label: string; values: string[]; tone?
 }
 
 function titleFor(id: string): string {
-  return { crtsh: 'Subdomains (CT logs)', dns: 'DNS records', internetdb: 'IP intelligence', wayback: 'Wayback history' }[id] ?? id;
+  return {
+    crtsh: 'Subdomains (CT logs)', dns: 'DNS records', internetdb: 'IP intelligence', wayback: 'Wayback history',
+    opensanctions: 'Sanctions / PEP screening', gleif: 'Legal entities (LEI)', sec: 'SEC filings', courtlistener: 'Court records', gdelt: 'Global news (GDELT)', openalex: 'Academic literature',
+  }[id] ?? id;
 }
 function fmtTs(ts: string): string {
   if (!/^\d{14}$/.test(ts)) return ts;
@@ -192,15 +244,15 @@ export function ReconView({ initialTarget }: { initialTarget?: string }) {
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && run()}
-          placeholder="A domain (github.com) or IP address (1.1.1.1)"
-          aria-label="Domain or IP"
+          placeholder="A domain, an IP, or a name / organization to investigate"
+          aria-label="Domain, IP, name, or organization"
         />
         <button className="btn btn-primary" onClick={run} disabled={loading || !target.trim()}>
           {loading ? 'Scanning' : 'Recon'}
         </button>
       </div>
       <div className="note" style={{ marginTop: 10 }}>
-        Infrastructure recon on public data only: Certificate Transparency logs, DNS, Shodan InternetDB, and the Wayback Machine. Every result links to its source.
+        Public data only. A domain or IP runs infrastructure connectors (CT logs, DNS, InternetDB, Wayback); a name or organization runs records and media connectors (OpenSanctions, GLEIF, SEC, CourtListener, GDELT news, OpenAlex). Every result links to its source and can be sealed into a verifiable evidence bundle.
       </div>
 
       {error ? <div className="error" style={{ marginTop: 18 }}>{error}</div> : null}

@@ -138,8 +138,9 @@ graph) → optional AI narrative → export.
 - `GET  /api/timelines/:id/search?q=…` - hybrid (BM25 + vector) search over the timeline
 - `POST /api/timelines/:id/ask` - `{ question }` → grounded local-RAG answer + sources
 - `GET  /api/v2/sources` - connector capability matrix (which sources are reachable now)
-- `POST /api/v2/collect/:connectorId` - `{ target }` → run one connector (crtsh, dns, internetdb, wayback)
-- `POST /api/v2/recon` - `{ target }` → run every applicable connector against a domain/IP
+- `POST /api/v2/collect/:connectorId` - `{ target }` → run one connector. Infrastructure: crtsh, dns, internetdb, wayback. Records/media (name or org): opensanctions, gleif, sec, courtlistener, gdelt, openalex.
+- `POST /api/v2/recon` - `{ target }` → run every applicable connector (domain/IP → infra; name/org → records + media) with cross-source corroboration
+- `POST /api/v2/recon/bundle` - `{ target }` → download a sealed, re-verifiable evidence bundle
 
 ---
 
