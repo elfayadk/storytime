@@ -20,6 +20,7 @@ export const crtshConnector: Connector = {
   domain: 'infra',
   auth: 'none',
   capabilities: ['search'],
+  sourceTier: 'primary',
   rateLimit: { rps: 1 },
   tosNote: 'Public CT logs (RFC 6962). Keyless. Be polite: 1 request/second.',
   applicable(task) {

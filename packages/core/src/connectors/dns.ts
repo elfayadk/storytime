@@ -11,6 +11,7 @@ export const dnsConnector: Connector = {
   domain: 'infra',
   auth: 'none',
   capabilities: ['lookup'],
+  sourceTier: 'primary',
   rateLimit: { rps: 5 },
   tosNote: 'Cloudflare DNS-over-HTTPS, keyless, public resolver.',
   applicable(task) {

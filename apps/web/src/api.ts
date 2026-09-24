@@ -123,19 +123,34 @@ export interface ConnectorInfo {
   domain: string;
   auth: string;
   capabilities: string[];
+  sourceTier: string;
   rateLimit: { rps: number };
   tosNote: string;
   available: boolean;
 }
+export interface Corroboration {
+  value: string;
+  sources: { connector: string; tier: string }[];
+  count: number;
+}
+export interface ReconResponse {
+  results: CollectResult[];
+  corroboration: Corroboration[];
+}
 
-export async function reconTarget(target: string): Promise<CollectResult[]> {
+export async function reconTarget(target: string): Promise<ReconResponse> {
   const res = await fetch('/api/v2/recon', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target }),
   });
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'recon failed');
-  return (await res.json()).results ?? [];
+  const d = await res.json();
+  return { results: d.results ?? [], corroboration: d.corroboration ?? [] };
+}
+
+export function reconBundleUrl(): string {
+  return '/api/v2/recon/bundle';
 }
 
 export async function getSources(): Promise<ConnectorInfo[]> {

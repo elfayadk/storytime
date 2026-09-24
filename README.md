@@ -36,7 +36,11 @@ as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
   connector sweep on public data: subdomains from Certificate Transparency logs
   (crt.sh), DNS-over-HTTPS records, Shodan InternetDB (open ports, CVEs, tags),
   and Wayback Machine history. Every result carries a provenance envelope (source
-  URL, fetch time, sha256, license). See [RESPONSIBLE-USE.md](RESPONSIBLE-USE.md).
+  URL, fetch time, sha256, license, source tier), values attested by multiple
+  sources are **corroborated**, and the whole sweep can be exported as a
+  **sealed evidence bundle** whose integrity anyone can re-verify:
+  `node scripts/verify-bundle.mjs <file>` (Merkle-rooted, tamper-evident).
+  See [RESPONSIBLE-USE.md](RESPONSIBLE-USE.md).
 - **Live streaming** - tail the Bluesky Jetstream firehose or public Nostr relays in real time for a handle or #hashtag; new matching posts append as they publish.
 - **Knowledge graph** - a local model (or rule-based signals) extracts bi-temporal facts (`who did what, when`) with valid-from/valid-to and evidence, so you can "time travel" and see what was true on any past date.
 - **Story arcs** - events cluster into themes over time, each arc dated and linked to its key moments.

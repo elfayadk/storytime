@@ -13,6 +13,9 @@ import {
   capabilityMatrix,
   runConnector,
   reconTarget,
+  corroborate,
+  sealBundle,
+  sourceTierOf,
   createLogger,
   type Platform,
   type ExportFormat,
@@ -173,13 +176,27 @@ export function setupRoutes(app: Express, store: Store): void {
     }
   });
 
-  // Recon sweep: run every applicable connector against a domain/IP/URL.
+  // Recon sweep + cross-source corroboration (memo T1).
   app.post('/api/v2/recon', async (req, res) => {
     const target = String(req.body?.target ?? '').trim();
     if (!target) return res.status(400).json({ error: 'target is required' });
     try {
       const results = await reconTarget(target, loadConfig().userAgent);
-      res.json({ target, results });
+      res.json({ target, results, corroboration: corroborate(results) });
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  // Sealed, re-verifiable evidence bundle for a recon target (memo T9).
+  app.post('/api/v2/recon/bundle', async (req, res) => {
+    const target = String(req.body?.target ?? '').trim();
+    if (!target) return res.status(400).json({ error: 'target is required' });
+    try {
+      const results = await reconTarget(target, loadConfig().userAgent);
+      const bundle = sealBundle(target, results, '2.0.0', sourceTierOf);
+      res.setHeader('Content-Disposition', `attachment; filename="${target.replace(/[^a-z0-9.]/gi, '_')}.evidence.json"`);
+      res.type('application/json').send(JSON.stringify(bundle, null, 2));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

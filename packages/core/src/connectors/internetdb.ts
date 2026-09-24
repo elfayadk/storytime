@@ -11,6 +11,7 @@ export const internetdbConnector: Connector = {
   domain: 'infra',
   auth: 'none',
   capabilities: ['lookup'],
+  sourceTier: 'aggregator',
   rateLimit: { rps: 2 },
   tosNote: 'Shodan InternetDB, keyless, free for non-commercial use.',
   applicable(task) {

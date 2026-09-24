@@ -23,6 +23,8 @@ import { createLogger } from '../src/util/logger.js';
 import { classifyOsintTarget, sha256, provenance } from '../src/connectors/index.js';
 import { crtshConnector } from '../src/connectors/crtsh.js';
 import { internetdbConnector } from '../src/connectors/internetdb.js';
+import { corroborate, sealBundle, verifyBundle, sourceTierOf } from '../src/connectors/index.js';
+import type { CollectResult } from '../src/connectors/index.js';
 import type { ClusterSummary, TimelineEvent, TimelineResult } from '../src/types.js';
 
 function ev(partial: Partial<TimelineEvent>): TimelineEvent {
@@ -272,6 +274,32 @@ test('connectors declare correct applicability and metadata', () => {
   assert.ok(!crtshConnector.applicable({ target: '1.1.1.1' }));
   assert.ok(internetdbConnector.applicable({ target: '8.8.8.8' }));
   assert.ok(!internetdbConnector.applicable({ target: 'example.com' }));
+});
+
+function fakeResults(): CollectResult[] {
+  const prov = (c: string, sha: string) => ({ connector: c, sourceUrl: `https://${c}/x`, fetchedAt: '2026-01-01T00:00:00Z', sha256: sha, licenseNote: 'public' });
+  return [
+    { connector: 'crtsh', domain: 'infra', target: 'x.com', items: [{ kind: 'subdomain', data: { host: 'api.x.com' }, provenance: prov('crtsh', 'aa') }], provenance: prov('crtsh', 'aa') },
+    { connector: 'dns', domain: 'infra', target: 'x.com', items: [{ kind: 'dns_record', data: { type: 'A', value: 'api.x.com' } as any, provenance: prov('dns', 'bb') }], provenance: prov('dns', 'bb') },
+  ];
+}
+
+test('corroborate counts a host attested by multiple sources', () => {
+  const c = corroborate(fakeResults());
+  const hit = c.find((x) => x.value === 'api.x.com');
+  assert.ok(hit, 'api.x.com should be corroborated');
+  assert.equal(hit!.count, 2);
+  assert.ok(hit!.sources.some((s) => s.connector === 'crtsh'));
+});
+
+test('sealBundle -> verifyBundle round-trips, and detects tampering', () => {
+  const bundle = sealBundle('x.com', fakeResults(), '2.0.0', sourceTierOf);
+  assert.equal(verifyBundle(bundle).valid, true);
+  // tamper: change an item after sealing
+  (bundle.results[0].items[0].data as any).host = 'evil.x.com';
+  const report = verifyBundle(bundle);
+  assert.equal(report.valid, false);
+  assert.ok(report.mismatches.some((m) => m.connector === 'crtsh'));
 });
 
 test('fingerprint produces a normalized style vector', () => {

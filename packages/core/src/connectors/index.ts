@@ -37,11 +37,49 @@ export async function reconTarget(target: string, ua: string): Promise<CollectRe
   );
 }
 
+export function sourceTierOf(id: string): string {
+  return getConnector(id)?.sourceTier ?? 'community';
+}
+
+/**
+ * Cross-source corroboration (memo T1): a claim's confidence is a function of
+ * how many INDEPENDENT sources attest it, not text plausibility. Collects the
+ * hosts/IPs each connector reports and counts distinct attesting sources.
+ */
+export interface Corroboration {
+  value: string;
+  sources: { connector: string; tier: string }[];
+  count: number;
+}
+export function corroborate(results: CollectResult[]): Corroboration[] {
+  const byValue = new Map<string, Map<string, string>>();
+  const note = (value: string, connector: string) => {
+    const v = value.toLowerCase().trim();
+    if (!v) return;
+    const m = byValue.get(v) ?? byValue.set(v, new Map()).get(v)!;
+    m.set(connector, sourceTierOf(connector));
+  };
+  for (const r of results) {
+    for (const it of r.items) {
+      const d = it.data as Record<string, unknown>;
+      if (typeof d.host === 'string') note(d.host, r.connector);
+      if (typeof d.value === 'string' && it.kind === 'dns_record' && (d.type === 'A' || d.type === 'AAAA')) note(d.value, r.connector);
+      for (const h of (d.hostnames as string[] | undefined) ?? []) note(h, r.connector);
+    }
+  }
+  return [...byValue.entries()]
+    .map(([value, m]) => ({ value, sources: [...m.entries()].map(([connector, tier]) => ({ connector, tier })), count: m.size }))
+    .filter((c) => c.count >= 2)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 100);
+}
+
 export interface ConnectorInfo {
   id: string;
   domain: Domain;
   auth: string;
   capabilities: string[];
+  sourceTier: string;
   rateLimit: { rps: number; burst?: number };
   tosNote: string;
   available: boolean;
@@ -55,6 +93,7 @@ export async function capabilityMatrix(ua: string): Promise<ConnectorInfo[]> {
       domain: c.domain,
       auth: c.auth,
       capabilities: c.capabilities,
+      sourceTier: c.sourceTier,
       rateLimit: c.rateLimit,
       tosNote: c.tosNote,
       available: await c.healthCheck(ua).catch(() => false),
@@ -64,3 +103,5 @@ export async function capabilityMatrix(ua: string): Promise<ConnectorInfo[]> {
 
 export * from './types.js';
 export { sha256, provenance } from './provenance.js';
+export { sealBundle, verifyBundle, merkleRoot, canonical } from './bundle.js';
+export type { EvidenceBundle, BundleEntry, VerifyReport } from './bundle.js';

@@ -1,12 +1,57 @@
 import { useEffect, useRef, useState } from 'react';
-import { reconTarget, type CollectResult, type Provenance, type RawItem } from '../api';
+import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, type Provenance, type RawItem, type ReconResponse } from '../api';
+
+const TIER: Record<string, string> = { crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive' };
+
+async function downloadBundle(target: string) {
+  const res = await fetch(reconBundleUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target }) });
+  if (!res.ok) return;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${target.replace(/[^a-z0-9.]/gi, '_')}.evidence.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function CorroborationPanel({ items }: { items: Corroboration[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="panel">
+      <h2 className="section-title">
+        Corroborated across sources
+        <span className="livecount">{items.length}</span>
+      </h2>
+      <div className="note" style={{ marginBottom: 10 }}>
+        Confidence rises with the number of independent sources that attest a value, not with how plausible it looks.
+      </div>
+      {items.slice(0, 30).map((c) => (
+        <div className="finding" key={c.value}>
+          <span className="count" style={{ color: 'var(--pos)' }}>{c.count}</span>
+          <div className="body">
+            <b dir="auto">{c.value}</b>
+            <span style={{ marginLeft: 8 }}>
+              {c.sources.map((s) => (
+                <span className="chip" key={s.connector} style={{ marginRight: 4 }}>
+                  {s.connector} ({s.tier})
+                </span>
+              ))}
+            </span>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
 
 const DOMAIN_ICON: Record<string, string> = { infra: '▦', media: '▩', records: '▤', socmint: '◈', geoint: '◉', darkweb: '▬' };
 
-function ProvenanceFoot({ p, warning }: { p: Provenance; warning?: string }) {
+function ProvenanceFoot({ p, warning, tier }: { p: Provenance; warning?: string; tier?: string }) {
   return (
     <div className="prov">
       {warning ? <span className="prov-warn">{warning}</span> : null}
+      {tier ? <span>tier {tier}</span> : null}
       {p.sourceUrl ? (
         <a href={p.sourceUrl} target="_blank" rel="noopener">
           source
@@ -29,7 +74,7 @@ function ResultCard({ r }: { r: CollectResult }) {
       </h2>
       {r.items.length === 0 && !r.warning ? <div className="note">Nothing found.</div> : null}
       {renderItems(r)}
-      <ProvenanceFoot p={r.provenance} warning={r.warning} />
+      <ProvenanceFoot p={r.provenance} warning={r.warning} tier={TIER[r.connector]} />
     </section>
   );
 }
@@ -114,7 +159,7 @@ function fmtTs(ts: string): string {
 export function ReconView({ initialTarget }: { initialTarget?: string }) {
   const [target, setTarget] = useState(initialTarget ?? '');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<CollectResult[] | null>(null);
+  const [recon, setRecon] = useState<ReconResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const ran = useRef(false);
 
@@ -122,9 +167,9 @@ export function ReconView({ initialTarget }: { initialTarget?: string }) {
     if (!target.trim() || loading) return;
     setLoading(true);
     setError(null);
-    setResults(null);
+    setRecon(null);
     try {
-      setResults(await reconTarget(target.trim()));
+      setRecon(await reconTarget(target.trim()));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -166,9 +211,18 @@ export function ReconView({ initialTarget }: { initialTarget?: string }) {
         </div>
       ) : null}
 
-      {results ? (
+      {recon ? (
         <div className="stack" style={{ paddingTop: 22 }}>
-          {results.map((r) => (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={() => downloadBundle(target.trim())} style={{ textDecoration: 'none' }}>
+              Download evidence bundle
+            </button>
+            <span className="tag" style={{ alignSelf: 'center' }}>
+              sealed, re-verifiable: node scripts/verify-bundle.mjs &lt;file&gt;
+            </span>
+          </div>
+          <CorroborationPanel items={recon.corroboration} />
+          {recon.results.map((r) => (
             <ResultCard key={r.connector} r={r} />
           ))}
         </div>

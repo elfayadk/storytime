@@ -11,6 +11,7 @@ export const waybackConnector: Connector = {
   domain: 'media',
   auth: 'none',
   capabilities: ['search', 'lookup'],
+  sourceTier: 'archive',
   rateLimit: { rps: 1 },
   tosNote: 'Internet Archive Wayback CDX API, keyless, public.',
   applicable(task) {

@@ -7,6 +7,8 @@
 export type Domain = 'socmint' | 'records' | 'media' | 'geoint' | 'infra' | 'darkweb';
 export type AuthTier = 'none' | 'free-key' | 'session' | 'tor-isolated';
 export type Capability = 'lookup' | 'search' | 'stream' | 'bulk';
+/** Source verification tier (memo T1): confidence is weighted by source authority. */
+export type SourceTier = 'primary' | 'aggregator' | 'archive' | 'community';
 
 export interface Provenance {
   connector: string;
@@ -44,6 +46,7 @@ export interface Connector {
   domain: Domain;
   auth: AuthTier;
   capabilities: Capability[];
+  sourceTier: SourceTier;
   rateLimit: { rps: number; burst?: number };
   tosNote: string;
   /** True when the connector accepts this target shape. */
