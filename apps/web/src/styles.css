@@ -109,14 +109,20 @@ a { color: inherit; }
 .icon-btn:hover { color: var(--text); border-color: var(--line-strong); }
 
 /* ---- hero ----------------------------------------------------------------- */
-.hero { position: relative; padding: 64px 0 40px; overflow: hidden; }
-.hero-motif {
-  position: absolute; inset: -40% 0 auto 0;
-  height: 520px;
-  pointer-events: none;
-  opacity: .5;
-  mask-image: radial-gradient(60% 60% at 50% 20%, #000 0%, transparent 72%);
+.hero { position: relative; display: grid; grid-template-columns: 1fr; gap: 20px; padding: 52px 0 40px; }
+@media (min-width: 860px) {
+  .hero { grid-template-columns: 1.15fr 0.85fr; align-items: center; gap: 32px; }
 }
+.hero-art { width: 100%; max-width: 400px; height: auto; justify-self: end; }
+@media (max-width: 859px) { .hero-art { display: none; } }
+.hero-art .rail { stroke: var(--line-strong); }
+.hero-art .dot { fill: var(--panel); stroke: var(--faint); }
+.hero-art .dot.hot { fill: var(--signal); stroke: var(--signal); }
+.hero-art .link { stroke: var(--faint); stroke-opacity: .28; fill: none; }
+.hero-art .link.hot { stroke: var(--signal); stroke-opacity: .5; }
+.hero-art .snode { fill: var(--panel); stroke: var(--line-strong); }
+.hero-art .score { fill: var(--muted); }
+.hero-art .score.hot { fill: var(--signal); }
 .hero h1 {
   font-family: var(--serif);
   font-weight: 500;

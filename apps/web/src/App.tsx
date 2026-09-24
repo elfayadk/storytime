@@ -10,12 +10,15 @@ import { Explore } from './components/Explore';
 import { Timeline } from './components/Timeline';
 import { MapPanel } from './components/MapPanel';
 import { Graph } from './components/Graph';
+import { HeroArt } from './components/HeroArt';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
 import type { Progress, TimelineResult } from './types';
 
 const FORMATS = ['md', 'json', 'csv', 'xml', 'html'];
 
 function getInitialTheme(): 'dark' | 'light' {
+  const param = new URLSearchParams(window.location.search).get('theme');
+  if (param === 'dark' || param === 'light') return param;
   try {
     const saved = localStorage.getItem('storytime-theme');
     if (saved === 'dark' || saved === 'light') return saved;
@@ -86,20 +89,18 @@ export default function App() {
       <div className="wrap">
         {!result && !loading ? (
           <section className="hero">
-            <svg className="hero-motif" viewBox="0 0 900 520" fill="none" aria-hidden preserveAspectRatio="xMidYMin slice">
-              {[70, 140, 210, 280, 350, 420].map((r) => (
-                <circle key={r} cx="450" cy="120" r={r} stroke="var(--signal)" strokeOpacity="0.10" />
-              ))}
-            </svg>
-            <h1>
-              Trace anyone's <em>public</em> story across the open web.
-            </h1>
-            <p className="lede">
-              Give Storytime a username or handle. It assembles that account's public activity from
-              GitHub, Mastodon, Bluesky, Hacker News, Dev.to and more into a single timeline, then reads
-              the patterns in it. No paid keys, nothing to sign up for.
-            </p>
-            <SearchBar onSubmit={run} loading={loading} aiAvailable={!!health?.ai.reachable} />
+            <div className="hero-copy">
+              <h1>
+                Trace anyone's <em>public</em> story across the open web.
+              </h1>
+              <p className="lede">
+                Give Storytime a username or handle. It gathers that account's public activity from
+                fifteen sources into a single timeline, then reads the patterns in it. No paid keys,
+                nothing to sign up for.
+              </p>
+              <SearchBar onSubmit={run} loading={loading} aiAvailable={!!health?.ai.reachable} />
+            </div>
+            <HeroArt />
           </section>
         ) : (
           <div style={{ padding: '20px 0 4px' }}>

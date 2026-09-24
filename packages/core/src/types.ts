@@ -16,7 +16,11 @@ export type Platform =
   | 'devto'
   | 'gitlab'
   | 'wikipedia'
-  | 'stackexchange';
+  | 'stackexchange'
+  | 'medium'
+  | 'lemmy'
+  | 'npm'
+  | 'youtube';
 
 export const PLATFORMS: Platform[] = [
   'github',
@@ -30,6 +34,10 @@ export const PLATFORMS: Platform[] = [
   'gitlab',
   'wikipedia',
   'stackexchange',
+  'medium',
+  'lemmy',
+  'npm',
+  'youtube',
 ];
 
 /** Event categories for classification. */

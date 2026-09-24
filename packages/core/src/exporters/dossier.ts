@@ -13,6 +13,10 @@ const PLATFORM: Record<string, string> = {
   devto: 'Dev.to',
   wikipedia: 'Wikipedia',
   stackexchange: 'Stack Overflow',
+  medium: 'Medium',
+  lemmy: 'Lemmy',
+  npm: 'npm',
+  youtube: 'YouTube',
 };
 
 function esc(v: unknown): string {

@@ -9,7 +9,11 @@ export type Platform =
   | 'devto'
   | 'gitlab'
   | 'wikipedia'
-  | 'stackexchange';
+  | 'stackexchange'
+  | 'medium'
+  | 'lemmy'
+  | 'npm'
+  | 'youtube';
 
 export interface Sentiment {
   score: number;
@@ -151,6 +155,10 @@ export const PLATFORM_META: Record<Platform, { icon: string; label: string }> = 
   gitlab: { icon: '▰', label: 'GitLab' },
   wikipedia: { icon: '◎', label: 'Wikipedia' },
   stackexchange: { icon: '△', label: 'Stack Overflow' },
+  medium: { icon: '▬', label: 'Medium' },
+  lemmy: { icon: '◘', label: 'Lemmy' },
+  npm: { icon: '▦', label: 'npm' },
+  youtube: { icon: '▷', label: 'YouTube' },
 };
 
 export const ALL_PLATFORMS: Platform[] = [
@@ -158,9 +166,13 @@ export const ALL_PLATFORMS: Platform[] = [
   'gitlab',
   'mastodon',
   'bluesky',
+  'youtube',
   'hackernews',
   'devto',
+  'medium',
   'stackexchange',
+  'lemmy',
+  'npm',
   'wikipedia',
   'reddit',
   'rss',
