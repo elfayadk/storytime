@@ -57,11 +57,16 @@ export interface Connector {
 
 /** Classify a free-text target so connectors can declare applicability. */
 export function classifyOsintTarget(target: string): {
-  kind: 'domain' | 'ip' | 'url' | 'email' | 'handle' | 'unknown';
+  kind: 'domain' | 'ip' | 'url' | 'email' | 'handle' | 'geo' | 'unknown';
   value: string;
 } {
   const t = target.trim();
   if (/^https?:\/\//i.test(t)) return { kind: 'url', value: t };
+  // geographic coordinates "lat,lon"
+  if (/^-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/.test(t)) {
+    const [lat, lon] = t.split(',').map((s) => Number(s.trim()));
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return { kind: 'geo', value: `${lat},${lon}` };
+  }
   if (/^(\d{1,3}\.){3}\d{1,3}$/.test(t) || /^[0-9a-f:]+:[0-9a-f:]+$/i.test(t)) return { kind: 'ip', value: t };
   if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t) && !t.includes(' ')) {
     // could be an email or a fediverse handle; treat plain user@host.tld as email here

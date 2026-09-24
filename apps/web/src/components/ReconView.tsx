@@ -4,6 +4,7 @@ import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, ty
 const TIER: Record<string, string> = {
   crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive',
   opensanctions: 'primary', gleif: 'primary', sec: 'primary', courtlistener: 'primary', gdelt: 'aggregator', openalex: 'primary',
+  adsb: 'primary', overpass: 'primary',
 };
 
 async function downloadBundle(target: string) {
@@ -123,7 +124,7 @@ function renderItems(r: CollectResult) {
       </div>
     );
   }
-  if (['opensanctions', 'gleif', 'sec', 'courtlistener', 'gdelt', 'openalex'].includes(r.connector)) {
+  if (['opensanctions', 'gleif', 'sec', 'courtlistener', 'gdelt', 'openalex', 'adsb', 'overpass'].includes(r.connector)) {
     return (
       <div className="records">
         {r.items.slice(0, 40).map((it, i) => (
@@ -166,6 +167,12 @@ function RecordRow({ connector, d }: { connector: string; d: any }) {
   } else if (connector === 'openalex') {
     title = d.title;
     meta = [d.year, (d.authors ?? []).slice(0, 3).join(', '), d.citedBy != null ? `${d.citedBy} citations` : ''].filter(Boolean).join(' - ');
+  } else if (connector === 'adsb') {
+    title = d.flight || d.registration || d.hex;
+    meta = [d.type, d.altitude != null ? `${d.altitude} ft` : '', d.groundSpeed != null ? `${d.groundSpeed} kt` : '', d.registration].filter(Boolean).join(' - ');
+  } else if (connector === 'overpass') {
+    title = d.name;
+    meta = [d.kind, d.lat != null ? `${Number(d.lat).toFixed(4)}, ${Number(d.lon).toFixed(4)}` : ''].filter(Boolean).join(' - ');
   }
   return (
     <div className="record">
@@ -201,6 +208,7 @@ function titleFor(id: string): string {
   return {
     crtsh: 'Subdomains (CT logs)', dns: 'DNS records', internetdb: 'IP intelligence', wayback: 'Wayback history',
     opensanctions: 'Sanctions / PEP screening', gleif: 'Legal entities (LEI)', sec: 'SEC filings', courtlistener: 'Court records', gdelt: 'Global news (GDELT)', openalex: 'Academic literature',
+    adsb: 'Aircraft nearby (ADS-B)', overpass: 'Places nearby (OpenStreetMap)',
   }[id] ?? id;
 }
 function fmtTs(ts: string): string {
@@ -244,15 +252,15 @@ export function ReconView({ initialTarget }: { initialTarget?: string }) {
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && run()}
-          placeholder="A domain, an IP, or a name / organization to investigate"
-          aria-label="Domain, IP, name, or organization"
+          placeholder="A domain, IP, name / organization, or lat,lon coordinates"
+          aria-label="Domain, IP, name, organization, or coordinates"
         />
         <button className="btn btn-primary" onClick={run} disabled={loading || !target.trim()}>
           {loading ? 'Scanning' : 'Recon'}
         </button>
       </div>
       <div className="note" style={{ marginTop: 10 }}>
-        Public data only. A domain or IP runs infrastructure connectors (CT logs, DNS, InternetDB, Wayback); a name or organization runs records and media connectors (OpenSanctions, GLEIF, SEC, CourtListener, GDELT news, OpenAlex). Every result links to its source and can be sealed into a verifiable evidence bundle.
+        Public data only. A domain or IP runs infrastructure connectors (CT logs, DNS, InternetDB, Wayback); a name or organization runs records and media (OpenSanctions, GLEIF, SEC, CourtListener, GDELT news, OpenAlex); lat,lon coordinates run GEOINT (live aircraft via ADS-B, nearby places via OpenStreetMap). Every result links to its source and can be sealed into a verifiable evidence bundle.
       </div>
 
       {error ? <div className="error" style={{ marginTop: 18 }}>{error}</div> : null}

@@ -9,6 +9,8 @@ import { opensanctionsConnector } from './opensanctions.js';
 import { courtlistenerConnector } from './courtlistener.js';
 import { gleifConnector } from './gleif.js';
 import { secConnector } from './sec.js';
+import { adsbConnector } from './adsb.js';
+import { overpassConnector } from './overpass.js';
 
 export const CONNECTORS: Connector[] = [
   crtshConnector,
@@ -21,6 +23,8 @@ export const CONNECTORS: Connector[] = [
   courtlistenerConnector,
   gdeltConnector,
   openalexConnector,
+  adsbConnector,
+  overpassConnector,
 ];
 
 export function getConnector(id: string): Connector | undefined {
