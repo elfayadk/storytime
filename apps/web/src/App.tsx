@@ -8,6 +8,7 @@ import { Findings } from './components/Findings';
 import { Explore } from './components/Explore';
 import { Timeline } from './components/Timeline';
 import { MapPanel } from './components/MapPanel';
+import { Graph } from './components/Graph';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
 import type { Progress, TimelineResult } from './types';
 
@@ -147,6 +148,10 @@ export default function App() {
             {result.rhythm ? <Rhythm rhythm={result.rhythm} /> : null}
 
             {result.stats.totalEvents > 0 ? <Trends stats={result.stats} /> : null}
+
+            {result.graph ? (
+              <Graph nodes={result.graph.nodes} edges={result.graph.edges} subject={result.target} />
+            ) : null}
 
             <MapPanel events={result.events} />
 

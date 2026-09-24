@@ -13,7 +13,9 @@ export type Platform =
   | 'bluesky'
   | 'pastebin'
   | 'hackernews'
-  | 'devto';
+  | 'devto'
+  | 'gitlab'
+  | 'wikipedia';
 
 export const PLATFORMS: Platform[] = [
   'github',
@@ -24,6 +26,8 @@ export const PLATFORMS: Platform[] = [
   'pastebin',
   'hackernews',
   'devto',
+  'gitlab',
+  'wikipedia',
 ];
 
 /** Event categories for classification. */

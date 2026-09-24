@@ -6,7 +6,9 @@ export type Platform =
   | 'bluesky'
   | 'pastebin'
   | 'hackernews'
-  | 'devto';
+  | 'devto'
+  | 'gitlab'
+  | 'wikipedia';
 
 export interface Sentiment {
   score: number;
@@ -81,11 +83,23 @@ export interface TimelineResult {
   events: SerializedEvent[];
   stats: Stats;
   rhythm?: ActivityRhythm;
-  graph: { nodes: unknown[]; edges: unknown[] };
+  graph: { nodes: GraphNode[]; edges: GraphEdge[] };
   narrative?: string;
   insights?: Insight[];
   clusters?: ClusterSummary[];
   embeddingProvider?: string;
+}
+export interface GraphNode {
+  id: string;
+  label: string;
+  platform?: Platform;
+  weight: number;
+}
+export interface GraphEdge {
+  source: string;
+  target: string;
+  type: string;
+  weight: number;
 }
 export interface SearchHit {
   score: number;
@@ -114,14 +128,18 @@ export const PLATFORM_META: Record<Platform, { icon: string; label: string }> = 
   pastebin: { icon: '▤', label: 'Pastebin' },
   hackernews: { icon: '▲', label: 'Hacker News' },
   devto: { icon: '◆', label: 'DEV' },
+  gitlab: { icon: '▰', label: 'GitLab' },
+  wikipedia: { icon: '◎', label: 'Wikipedia' },
 };
 
 export const ALL_PLATFORMS: Platform[] = [
   'github',
+  'gitlab',
   'mastodon',
   'bluesky',
   'hackernews',
   'devto',
+  'wikipedia',
   'reddit',
   'rss',
   'pastebin',

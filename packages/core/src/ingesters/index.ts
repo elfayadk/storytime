@@ -8,6 +8,8 @@ import { rssIngester } from './rss.js';
 import { pastebinIngester } from './pastebin.js';
 import { hackernewsIngester } from './hackernews.js';
 import { devtoIngester } from './devto.js';
+import { gitlabIngester } from './gitlab.js';
+import { wikipediaIngester } from './wikipedia.js';
 
 export const INGESTERS: Record<Platform, Ingester> = {
   github: githubIngester,
@@ -18,6 +20,8 @@ export const INGESTERS: Record<Platform, Ingester> = {
   pastebin: pastebinIngester,
   hackernews: hackernewsIngester,
   devto: devtoIngester,
+  gitlab: gitlabIngester,
+  wikipedia: wikipediaIngester,
 };
 
 export function getIngesters(platforms: Platform[]): Ingester[] {
