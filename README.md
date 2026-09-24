@@ -32,6 +32,7 @@ Storytime doesn't just aggregate - it *understands*. Every feature below runs
 locally and falls back cleanly, so it works with **zero setup** and gets sharper
 as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
 
+- **Live streaming** - tail the Bluesky Jetstream firehose in real time for a handle or #hashtag; new matching posts append as they publish.
 - **Semantic search** - query events by *meaning*, not keywords (`?q=performance`
   finds "made it 3x faster" even without the word).
 - **Ask-your-timeline (local RAG)** - ask a question; get an answer grounded in

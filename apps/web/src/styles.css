@@ -440,6 +440,17 @@ a { color: inherit; }
 .modeswitch button { background: transparent; border: 0; color: var(--muted); font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 5px 14px; border-radius: 999px; cursor: pointer; }
 .modeswitch button[data-on="true"] { background: var(--signal); color: var(--signal-ink); }
 
+/* ---- live monitor --------------------------------------------------------- */
+.livedot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); display: inline-block; }
+.livedot.on { background: var(--neg); animation: pulse 1.5s infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(229, 129, 115, 0.5); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 5px rgba(229, 129, 115, 0); }
+}
+.livecount { margin-left: auto; color: var(--muted); font-family: var(--mono); font-size: 12px; font-weight: 400; }
+.node.livenode { border-color: var(--neg); }
+@media (prefers-reduced-motion: reduce) { .livedot.on { animation: none; } }
+
 /* ---- empty / error -------------------------------------------------------- */
 .center-note { text-align: center; color: var(--muted); padding: 40px 0; }
 .error { border: 1px solid color-mix(in srgb, var(--neg) 50%, transparent); background: color-mix(in srgb, var(--neg) 10%, transparent); border-radius: 10px; padding: 14px 16px; color: var(--text); }

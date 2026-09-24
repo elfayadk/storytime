@@ -18,6 +18,7 @@ import {
   type SerializedEvent,
 } from '@storytime/core';
 import type { Store } from './db.js';
+import { streamBluesky } from './jetstream.js';
 
 const CONTENT_TYPE: Record<string, string> = {
   json: 'application/json',
@@ -111,6 +112,36 @@ export function setupRoutes(app: Express, store: Store): void {
     } catch (err) {
       send('error', { message: (err as Error).message });
     } finally {
+      res.end();
+    }
+  });
+
+  // Live Bluesky firehose (Jetstream) for a handle or #hashtag, streamed over SSE.
+  app.get('/api/live', async (req, res) => {
+    const target = String(req.query.target ?? '').trim();
+    if (!target) return res.status(400).json({ error: 'target is required' });
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    res.write(`event: status\ndata: ${JSON.stringify({ state: 'connected', target })}\n\n`);
+
+    const ctrl = new AbortController();
+    const heartbeat = setInterval(() => res.write(': ping\n\n'), 15000);
+    req.on('close', () => {
+      ctrl.abort();
+      clearInterval(heartbeat);
+    });
+    try {
+      for await (const ev of streamBluesky(target, ctrl.signal)) {
+        res.write(`event: event.added\ndata: ${JSON.stringify(ev)}\n\n`);
+      }
+    } catch (err) {
+      res.write(`event: error\ndata: ${JSON.stringify({ message: (err as Error).message })}\n\n`);
+    } finally {
+      clearInterval(heartbeat);
       res.end();
     }
   });

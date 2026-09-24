@@ -96,6 +96,19 @@ export function exportUrl(id: string, fmt: string): string {
   return `/api/timelines/${id}/export.${fmt}`;
 }
 
+/** Open a live Bluesky stream for a handle or #hashtag. Returns a stop function. */
+export function openLive(
+  target: string,
+  onEvent: (e: import('./types').SerializedEvent) => void,
+  onStatus?: (state: string) => void,
+): () => void {
+  const es = new EventSource(`/api/live?target=${encodeURIComponent(target)}`);
+  es.addEventListener('event.added', (e) => onEvent(JSON.parse((e as MessageEvent).data)));
+  es.addEventListener('status', (e) => onStatus?.(JSON.parse((e as MessageEvent).data).state));
+  es.addEventListener('error', () => onStatus?.('reconnecting'));
+  return () => es.close();
+}
+
 export async function searchTimeline(id: string, q: string, k = 10): Promise<SearchHit[]> {
   const res = await fetch(`/api/timelines/${id}/search?q=${encodeURIComponent(q)}&k=${k}`);
   if (!res.ok) throw new Error('search failed');

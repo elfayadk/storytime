@@ -13,6 +13,7 @@ import { Graph } from './components/Graph';
 import { HeroArt } from './components/HeroArt';
 import { DateFilter } from './components/DateFilter';
 import { Compare } from './components/Compare';
+import { LivePanel } from './components/LivePanel';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
 import { bounds, filterByRange, recomputeStats, type DateRange } from './derive';
 import type { Progress, TimelineResult } from './types';
@@ -202,6 +203,8 @@ export default function App() {
                 ) : null}
 
                 {view.id && view.stats.totalEvents > 0 ? <Explore timelineId={view.id} /> : null}
+
+                {!ranged ? <LivePanel initialTarget={view.target} /> : null}
 
                 {/* Whole-account analytics: shown for the full trace, hidden while a date range narrows the view. */}
                 {!ranged ? <Findings clusters={view.clusters} insights={view.insights} /> : null}
