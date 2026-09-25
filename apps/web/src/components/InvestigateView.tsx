@@ -6,6 +6,7 @@ import {
   type Investigation,
   type InvestigationProgress,
   type LedgerStep,
+  type ResolvedEntity,
 } from '../api';
 
 const TOOL_LABEL: Record<string, string> = {
@@ -80,6 +81,53 @@ function HypothesisBoard({ hypotheses }: { hypotheses: Hypothesis[] }) {
               </div>
             </div>
             {h.note ? <div className="hypo-note">{h.note}</div> : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const ID_LABEL: Record<string, string> = { lei: 'LEI', cik: 'CIK', ticker: 'ticker', domain: 'domain' };
+
+/** Cross-source entity resolution: records that name the same real-world entity, merged. */
+function EntitiesPanel({ entities }: { entities: ResolvedEntity[] }) {
+  const multi = entities.filter((e) => e.sources.length > 1 || Object.keys(e.identifiers).length > 0);
+  const shown = multi.length ? multi : entities;
+  if (shown.length === 0) return null;
+  return (
+    <section className="panel">
+      <h2 className="section-title">
+        Resolved entities
+        <span className="livecount">{shown.length}</span>
+      </h2>
+      <div className="note" style={{ marginBottom: 12 }}>
+        Records from different sources that name the same organization or person, merged. Linked hard by a
+        shared identifier, softly by matching names.
+      </div>
+      <div className="entity-list">
+        {shown.map((e) => (
+          <div className="entity" key={e.id}>
+            <div className="ent-head">
+              <b className="ent-name" dir="auto">{e.canonicalName}</b>
+              <span className="ent-role">{e.role}</span>
+              {e.sources.map((s) => <span className="ent-src" key={s}>{s}</span>)}
+            </div>
+            {Object.keys(e.identifiers).length ? (
+              <div className="ent-ids">
+                {Object.entries(e.identifiers).map(([k, v]) => (
+                  <span className="ent-id" key={k}><span className="ent-id-k">{ID_LABEL[k] ?? k}</span> {v}</span>
+                ))}
+              </div>
+            ) : null}
+            {e.aliases.length ? <div className="ent-aliases">also: {e.aliases.slice(0, 5).join(' · ')}</div> : null}
+            {e.links.length ? (
+              <div className="ent-link">
+                {e.links.map((l, i) => (
+                  <span key={i} className={`ent-link-tag ${l.by}`}>{l.by === 'identifier' ? l.detail : l.by === 'name' ? 'same name' : 'similar name'}</span>
+                ))}
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
@@ -264,6 +312,8 @@ export function InvestigateView({ initialTarget }: { initialTarget?: string }) {
           ) : null}
 
           <HypothesisBoard hypotheses={inv.hypotheses} />
+
+          {inv.entities?.length ? <EntitiesPanel entities={inv.entities} /> : null}
 
           <section className="panel">
             <h2 className="section-title">

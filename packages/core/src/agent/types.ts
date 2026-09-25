@@ -1,3 +1,6 @@
+import type { ResolvedEntity } from '../connectors/entities.js';
+export type { ResolvedEntity } from '../connectors/entities.js';
+
 /**
  * Agentic investigation layer (upgrade pack doc 04 / memo T2, T4, T10).
  * Design choices, per the research the memo cites:
@@ -66,6 +69,7 @@ export interface Investigation {
   ledger: LedgerStep[];
   findings: Finding[];
   hypotheses: Hypothesis[];
+  entities: ResolvedEntity[];
   metrics: InvestigationMetrics;
   narrative?: string;
   usedAI: boolean;

@@ -45,7 +45,11 @@ as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
   investigation over the connectors (function-calling, not ReAct), runs the tools,
   and derives findings that each **cite their evidence**. A critic pass drops any
   claim whose citation does not resolve to a collected item, so the run reports a
-  live **citation-validity** score. It scores **competing hypotheses** (Analysis of
+  live **citation-validity** score. It performs cross-source **entity resolution**
+  (records that name the same organization or person are merged, linked hard by a
+  shared identifier like an LEI or ticker and softly by name, and a conflicting
+  identifier blocks a merge, so two companies that share a name but not an LEI stay
+  distinct). It scores **competing hypotheses** (Analysis of
   Competing Hypotheses: the surviving hypothesis is the least-inconsistent, not the
   most-confirmed), keeps a replayable, hash-checkable **ledger** of every tool call,
   and flags high-stakes findings (sanctions or court matches) for **analyst review**

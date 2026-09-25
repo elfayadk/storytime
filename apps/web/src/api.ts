@@ -199,6 +199,18 @@ export interface Hypothesis {
   disconfirm: number;
   note?: string;
 }
+export interface ResolvedEntity {
+  id: string;
+  canonicalName: string;
+  aliases: string[];
+  role: string;
+  identifiers: Record<string, string>;
+  attributes: Record<string, string>;
+  sources: string[];
+  mentions: number;
+  confidence: number;
+  links: { by: 'identifier' | 'name' | 'similarity'; detail: string }[];
+}
 export interface InvestigationMetrics {
   toolsApplicable: number;
   toolsRun: number;
@@ -218,6 +230,7 @@ export interface Investigation {
   ledger: LedgerStep[];
   findings: Finding[];
   hypotheses: Hypothesis[];
+  entities: ResolvedEntity[];
   metrics: InvestigationMetrics;
   narrative?: string;
   usedAI: boolean;

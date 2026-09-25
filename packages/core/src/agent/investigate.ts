@@ -1,7 +1,7 @@
 import type { StorytimeConfig } from '../config.js';
 import type { Logger } from '../util/logger.js';
 import { createLogger } from '../util/logger.js';
-import { runConnector, corroborate, type Corroboration } from '../connectors/index.js';
+import { runConnector, corroborate, resolveEntities, type Corroboration } from '../connectors/index.js';
 import { classifyOsintTarget, type CollectResult } from '../connectors/types.js';
 import { OllamaClient } from '../ai/ollama.js';
 import { applicableTools } from './tools.js';
@@ -90,6 +90,10 @@ export async function investigate(objective: string, target: string, opts: Inves
   const droppedByCritic = before - findings.length;
   const citedFindings = findings.filter((f) => f.evidence.length > 0).length;
 
+  // Cross-source entity resolution (memo T8): collapse records that name the
+  // same real-world entity, linked by shared identifiers or fuzzy name match.
+  const entities = resolveEntities(results);
+
   // Hypotheses (ACH) over the same evidence.
   emit({ phase: 'hypothesize', message: 'Scoring competing hypotheses' });
   const hypotheses = buildHypotheses(results);
@@ -115,6 +119,7 @@ export async function investigate(objective: string, target: string, opts: Inves
     ledger,
     findings,
     hypotheses,
+    entities,
     metrics: {
       toolsApplicable: tools.length,
       toolsRun: ledger.length,

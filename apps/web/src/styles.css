@@ -634,3 +634,28 @@ a.rec-title:hover { color: var(--signal); }
   .ledger-row .lr-out, .ledger-row .lr-sha, .ledger-row .lr-src { display: none; }
   .hbar { grid-template-columns: 66px 1fr 24px; }
 }
+
+/* resolved entities */
+.entity-list { display: flex; flex-direction: column; gap: 9px; }
+.entity {
+  border: 1px solid var(--line); border-left: 3px solid var(--cool);
+  border-radius: 10px; padding: 13px 16px; background: var(--ink-2);
+}
+.ent-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.ent-name { font-size: 16px; color: var(--text); letter-spacing: -0.01em; }
+.ent-role {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint);
+  border: 1px solid var(--line-strong); border-radius: 20px; padding: 1px 8px;
+}
+.ent-src {
+  font-family: var(--mono); font-size: 11px; color: var(--cool);
+  background: color-mix(in srgb, var(--cool) 12%, transparent); border-radius: 6px; padding: 1px 7px;
+}
+.ent-ids { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.ent-id { font-family: var(--mono); font-size: 12px; color: var(--text); border: 1px solid var(--line-strong); border-radius: 7px; padding: 2px 9px; }
+.ent-id-k { color: var(--faint); }
+.ent-aliases { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.ent-link { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 6px; }
+.ent-link-tag { font-size: 11px; letter-spacing: 0.02em; border-radius: 20px; padding: 2px 9px; }
+.ent-link-tag.identifier { color: var(--signal-ink); background: var(--signal); font-family: var(--mono); font-weight: 600; }
+.ent-link-tag.name, .ent-link-tag.similarity { color: var(--muted); border: 1px solid var(--line-strong); }

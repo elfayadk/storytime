@@ -128,6 +128,8 @@ export async function capabilityMatrix(ua: string): Promise<ConnectorInfo[]> {
 }
 
 export * from './types.js';
+export { resolveEntities, extractMentions, resolveMentions, normalizeEntityName, jaroWinkler } from './entities.js';
+export type { ResolvedEntity, EntityMention } from './entities.js';
 export { sha256, provenance } from './provenance.js';
 export { sealBundle, verifyBundle, merkleRoot, canonical } from './bundle.js';
 export type { EvidenceBundle, BundleEntry, VerifyReport } from './bundle.js';
