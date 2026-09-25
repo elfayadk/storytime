@@ -31,12 +31,13 @@ const DESCRIPTIONS: Record<string, string> = {
   overpass: 'List named places, amenities and buildings near coordinates from OpenStreetMap.',
   nominatim: 'Reverse geocode coordinates to a named place and full address.',
   socmint: 'Check which public platforms have a profile for a username.',
+  sentinel: 'List recent Sentinel-2 satellite scenes covering coordinates, with cloud cover.',
 };
 
 const INPUT_KIND: Record<string, ToolSpec['input']> = {
   crtsh: 'domain', dns: 'domain', wayback: 'domain', internetdb: 'ip',
   opensanctions: 'name', gleif: 'name', sec: 'name', courtlistener: 'name', gdelt: 'name', openalex: 'name',
-  adsb: 'coordinates', overpass: 'coordinates', nominatim: 'coordinates',
+  adsb: 'coordinates', overpass: 'coordinates', nominatim: 'coordinates', sentinel: 'coordinates',
 };
 
 /** The full menu, one spec per registered connector. */

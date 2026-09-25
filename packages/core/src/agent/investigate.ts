@@ -12,7 +12,7 @@ import type { Finding, Investigation, InvestigationProgress, LedgerStep } from '
 const TITLES: Record<string, string> = {
   crtsh: 'Certificate transparency', dns: 'DNS', internetdb: 'IP intelligence', wayback: 'Wayback Machine',
   opensanctions: 'Sanctions screening', gleif: 'LEI registry', sec: 'SEC EDGAR', courtlistener: 'Court records',
-  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence',
+  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence', sentinel: 'Sentinel-2 imagery',
 };
 
 export interface InvestigateOptions {
@@ -236,6 +236,13 @@ function deriveFindings(results: CollectResult[], corr: Corroboration[]): Findin
       const names = present.map((it) => (it.data as { platform?: string }).platform);
       out.push(mk(`Username present on ${present.length} platforms: ${names.join(', ')}`, 0.7, 'username presence (content-differential)', present.map((it) => ({ label: String((it.data as { platform?: string }).platform), url: String((it.data as { url?: string }).url) })), 'pending', ['Same username on different platforms is not proof of the same person; confirm before linking identities.']));
     }
+  }
+
+  const sat = by('sentinel');
+  if (sat && sat.items.length) {
+    const top = sat.items[0].data as { date?: string; cloudCover?: number };
+    const clear = sat.items.filter((it) => Number((it.data as { cloudCover?: number }).cloudCover ?? 100) <= 20).length;
+    out.push(mk(`Recent Sentinel-2 imagery available: ${sat.items.length} scenes, most recent ${top.date}${top.cloudCover != null ? ` (${top.cloudCover}% cloud)` : ''}${clear ? `, ${clear} with under 20% cloud` : ''}`, 0.85, 'satellite imagery availability', [ev(sat)], 'auto'));
   }
 
   const nom = by('nominatim');

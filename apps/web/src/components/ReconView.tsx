@@ -4,7 +4,7 @@ import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, ty
 const TIER: Record<string, string> = {
   crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive',
   opensanctions: 'primary', gleif: 'primary', sec: 'primary', courtlistener: 'primary', gdelt: 'aggregator', openalex: 'primary',
-  adsb: 'primary', overpass: 'primary', nominatim: 'primary', socmint: 'aggregator',
+  adsb: 'primary', overpass: 'primary', nominatim: 'primary', socmint: 'aggregator', sentinel: 'primary',
 };
 
 async function downloadBundle(target: string) {
@@ -105,6 +105,27 @@ function renderItems(r: CollectResult) {
             <span className="dnsval" dir="auto">{String((it.data as any).value)}</span>
           </div>
         ))}
+      </div>
+    );
+  }
+  if (r.connector === 'sentinel') {
+    return (
+      <div className="scenes">
+        {r.items.map((it, i) => {
+          const d = it.data as any;
+          const cloud = d.cloudCover;
+          return (
+            <a className="scene" key={i} href={d.url} target="_blank" rel="noopener" title={d.id}>
+              {d.thumbnail ? <img className="scene-thumb" src={d.thumbnail} alt={`Sentinel-2 scene ${d.date}`} loading="lazy" /> : <div className="scene-thumb noimg" />}
+              <span className="scene-date">{d.date}</span>
+              {cloud != null ? (
+                <span className="scene-cloud" style={{ color: cloud <= 20 ? 'var(--pos)' : cloud <= 60 ? 'var(--signal)' : 'var(--muted)' }}>
+                  {cloud}% cloud
+                </span>
+              ) : null}
+            </a>
+          );
+        })}
       </div>
     );
   }
@@ -234,7 +255,7 @@ function titleFor(id: string): string {
     crtsh: 'Subdomains (CT logs)', dns: 'DNS records', internetdb: 'IP intelligence', wayback: 'Wayback history',
     opensanctions: 'Sanctions / PEP screening', gleif: 'Legal entities (LEI)', sec: 'SEC filings', courtlistener: 'Court records', gdelt: 'Global news (GDELT)', openalex: 'Academic literature',
     adsb: 'Aircraft nearby (ADS-B)', overpass: 'Places nearby (OpenStreetMap)', nominatim: 'Place at these coordinates',
-    socmint: 'Username across platforms',
+    socmint: 'Username across platforms', sentinel: 'Satellite imagery (Sentinel-2)',
   }[id] ?? id;
 }
 function fmtTs(ts: string): string {
