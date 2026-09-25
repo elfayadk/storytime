@@ -30,6 +30,7 @@ const DESCRIPTIONS: Record<string, string> = {
   adsb: 'List live aircraft near coordinates, or track one aircraft by ICAO hex.',
   overpass: 'List named places, amenities and buildings near coordinates from OpenStreetMap.',
   nominatim: 'Reverse geocode coordinates to a named place and full address.',
+  socmint: 'Check which public platforms have a profile for a username.',
 };
 
 const INPUT_KIND: Record<string, ToolSpec['input']> = {

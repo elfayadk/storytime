@@ -12,7 +12,7 @@ import type { Finding, Investigation, InvestigationProgress, LedgerStep } from '
 const TITLES: Record<string, string> = {
   crtsh: 'Certificate transparency', dns: 'DNS', internetdb: 'IP intelligence', wayback: 'Wayback Machine',
   opensanctions: 'Sanctions screening', gleif: 'LEI registry', sec: 'SEC EDGAR', courtlistener: 'Court records',
-  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode',
+  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence',
 };
 
 export interface InvestigateOptions {
@@ -227,6 +227,15 @@ function deriveFindings(results: CollectResult[], corr: Corroboration[]): Findin
   if (osm && osm.items.length) {
     const names = osm.items.slice(0, 3).map((it) => (it.data as { name?: string }).name).filter(Boolean);
     out.push(mk(`${osm.items.length} named places nearby${names.length ? ` (e.g. ${names.join(', ')})` : ''}`, 0.72, 'OpenStreetMap proximity', [ev(osm)], 'auto'));
+  }
+
+  const soc = by('socmint');
+  if (soc && soc.items.length) {
+    const present = soc.items.filter((it) => (it.data as { status?: string }).status === 'present');
+    if (present.length) {
+      const names = present.map((it) => (it.data as { platform?: string }).platform);
+      out.push(mk(`Username present on ${present.length} platforms: ${names.join(', ')}`, 0.7, 'username presence (content-differential)', present.map((it) => ({ label: String((it.data as { platform?: string }).platform), url: String((it.data as { url?: string }).url) })), 'pending', ['Same username on different platforms is not proof of the same person; confirm before linking identities.']));
+    }
   }
 
   const nom = by('nominatim');

@@ -12,6 +12,7 @@ import { secConnector } from './sec.js';
 import { adsbConnector } from './adsb.js';
 import { overpassConnector } from './overpass.js';
 import { nominatimConnector } from './nominatim.js';
+import { socmintConnector } from './socmint.js';
 
 export const CONNECTORS: Connector[] = [
   crtshConnector,
@@ -27,6 +28,7 @@ export const CONNECTORS: Connector[] = [
   adsbConnector,
   overpassConnector,
   nominatimConnector,
+  socmintConnector,
 ];
 
 export function getConnector(id: string): Connector | undefined {

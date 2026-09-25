@@ -4,7 +4,7 @@ import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, ty
 const TIER: Record<string, string> = {
   crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive',
   opensanctions: 'primary', gleif: 'primary', sec: 'primary', courtlistener: 'primary', gdelt: 'aggregator', openalex: 'primary',
-  adsb: 'primary', overpass: 'primary', nominatim: 'primary',
+  adsb: 'primary', overpass: 'primary', nominatim: 'primary', socmint: 'aggregator',
 };
 
 async function downloadBundle(target: string) {
@@ -105,6 +105,28 @@ function renderItems(r: CollectResult) {
             <span className="dnsval" dir="auto">{String((it.data as any).value)}</span>
           </div>
         ))}
+      </div>
+    );
+  }
+  if (r.connector === 'socmint') {
+    const TONE: Record<string, { color: string; label: string }> = {
+      present: { color: 'var(--pos)', label: 'found' },
+      absent: { color: 'var(--faint)', label: 'not found' },
+      unknown: { color: 'var(--muted)', label: 'unknown' },
+    };
+    return (
+      <div className="presence">
+        {r.items.map((it, i) => {
+          const d = it.data as any;
+          const t = TONE[d.status] ?? TONE.unknown;
+          return (
+            <a className="presence-row" key={i} href={d.url} target="_blank" rel="noopener">
+              <span className="pres-plat">{d.platform}</span>
+              <span className="pres-dot" style={{ background: t.color }} />
+              <span className="pres-status" style={{ color: t.color }}>{t.label}</span>
+            </a>
+          );
+        })}
       </div>
     );
   }
@@ -212,6 +234,7 @@ function titleFor(id: string): string {
     crtsh: 'Subdomains (CT logs)', dns: 'DNS records', internetdb: 'IP intelligence', wayback: 'Wayback history',
     opensanctions: 'Sanctions / PEP screening', gleif: 'Legal entities (LEI)', sec: 'SEC filings', courtlistener: 'Court records', gdelt: 'Global news (GDELT)', openalex: 'Academic literature',
     adsb: 'Aircraft nearby (ADS-B)', overpass: 'Places nearby (OpenStreetMap)', nominatim: 'Place at these coordinates',
+    socmint: 'Username across platforms',
   }[id] ?? id;
 }
 function fmtTs(ts: string): string {
