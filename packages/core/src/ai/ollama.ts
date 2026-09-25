@@ -58,6 +58,38 @@ export class OllamaClient {
     }
   }
 
+  /**
+   * Structured generation for the agent's tool/hypothesis selection. Asks the
+   * model to emit JSON (Ollama's format:json constrains the decoder), and
+   * returns the raw JSON string for the caller to parse and validate. Fails
+   * soft to null, so every caller keeps a deterministic fallback.
+   */
+  async generateJSON(prompt: string): Promise<string | null> {
+    try {
+      const res = await fetch(`${this.config.ai.endpoint}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: this.config.ai.model,
+          prompt,
+          stream: false,
+          format: 'json',
+          options: { temperature: 0 },
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { response?: string };
+      const out = (data.response ?? '').trim();
+      if (!out) return null;
+      const m = out.match(/[[{][\s\S]*[\]}]/);
+      return m ? m[0] : out;
+    } catch (err) {
+      this.logger.debug(`ollama json: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   /** One-line summary for a single event. */
   async summarizeEvent(event: TimelineEvent): Promise<string | null> {
     const text = `${event.title}\n${event.content}`.slice(0, 1500);

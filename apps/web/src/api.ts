@@ -172,6 +172,87 @@ export function openLive(
   return () => es.close();
 }
 
+// ---- Agentic investigator (v2) ----
+export interface LedgerStep {
+  step: number;
+  tool: string;
+  input: string;
+  outcome: string;
+  itemCount: number;
+  sourceUrl?: string;
+  sha256?: string;
+  at: string;
+}
+export interface Finding {
+  id: string;
+  claim: string;
+  confidence: number;
+  method: string;
+  evidence: { label: string; url: string }[];
+  caveats?: string[];
+  reviewStatus: 'auto' | 'pending' | 'approved' | 'rejected';
+}
+export interface Hypothesis {
+  id: string;
+  statement: string;
+  support: number;
+  disconfirm: number;
+  note?: string;
+}
+export interface InvestigationMetrics {
+  toolsApplicable: number;
+  toolsRun: number;
+  toolsFailed: number;
+  findings: number;
+  citedFindings: number;
+  citationValidity: number;
+  droppedByCritic: number;
+  corroboratedValues: number;
+  planRationale: string;
+}
+export interface Investigation {
+  objective: string;
+  target: string;
+  targetKind: string;
+  plan: string[];
+  ledger: LedgerStep[];
+  findings: Finding[];
+  hypotheses: Hypothesis[];
+  metrics: InvestigationMetrics;
+  narrative?: string;
+  usedAI: boolean;
+  generatedAt: string;
+}
+export interface InvestigationProgress {
+  phase: 'plan' | 'collect' | 'analyze' | 'hypothesize' | 'critic' | 'done';
+  message: string;
+  step?: LedgerStep;
+}
+
+/** Run an investigation with live progress via SSE; resolves with the dossier. */
+export function runInvestigation(
+  objective: string,
+  target: string,
+  onProgress: (p: InvestigationProgress) => void,
+): Promise<Investigation> {
+  const qs = new URLSearchParams({ target, objective });
+  return new Promise((resolve, reject) => {
+    const es = new EventSource(`/api/v2/investigations/stream?${qs.toString()}`);
+    let settled = false;
+    es.addEventListener('progress', (e) => onProgress(JSON.parse((e as MessageEvent).data)));
+    es.addEventListener('result', (e) => {
+      settled = true;
+      resolve(JSON.parse((e as MessageEvent).data));
+      es.close();
+    });
+    es.addEventListener('error', (e) => {
+      const data = (e as MessageEvent).data;
+      if (!settled) reject(new Error(data ? JSON.parse(data).message : 'investigation stream failed'));
+      es.close();
+    });
+  });
+}
+
 export async function searchTimeline(id: string, q: string, k = 10): Promise<SearchHit[]> {
   const res = await fetch(`/api/timelines/${id}/search?q=${encodeURIComponent(q)}&k=${k}`);
   if (!res.ok) throw new Error('search failed');

@@ -41,6 +41,16 @@ as you opt in. See [`docs/ADVANCED.md`](docs/ADVANCED.md).
   **sealed evidence bundle** whose integrity anyone can re-verify:
   `node scripts/verify-bundle.mjs <file>` (Merkle-rooted, tamper-evident).
   See [RESPONSIBLE-USE.md](RESPONSIBLE-USE.md).
+- **Agentic investigator** (Investigate mode) - a local, read-only agent that plans an
+  investigation over the connectors (function-calling, not ReAct), runs the tools,
+  and derives findings that each **cite their evidence**. A critic pass drops any
+  claim whose citation does not resolve to a collected item, so the run reports a
+  live **citation-validity** score. It scores **competing hypotheses** (Analysis of
+  Competing Hypotheses: the surviving hypothesis is the least-inconsistent, not the
+  most-confirmed), keeps a replayable, hash-checkable **ledger** of every tool call,
+  and flags high-stakes findings (sanctions or court matches) for **analyst review**
+  rather than asserting them. Fully deterministic without a model; a local Ollama
+  model sharpens the plan and adds a written assessment when present.
 - **Live streaming** - tail the Bluesky Jetstream firehose or public Nostr relays in real time for a handle or #hashtag; new matching posts append as they publish.
 - **Knowledge graph** - a local model (or rule-based signals) extracts bi-temporal facts (`who did what, when`) with valid-from/valid-to and evidence, so you can "time travel" and see what was true on any past date.
 - **Story arcs** - events cluster into themes over time, each arc dated and linked to its key moments.
@@ -141,6 +151,9 @@ graph) → optional AI narrative → export.
 - `POST /api/v2/collect/:connectorId` - `{ target }` → run one connector. Infrastructure: crtsh, dns, internetdb, wayback. Records/media (name or org): opensanctions, gleif, sec, courtlistener, gdelt, openalex.
 - `POST /api/v2/recon` - `{ target }` → run every applicable connector (domain/IP → infra; name/org → records + media) with cross-source corroboration
 - `POST /api/v2/recon/bundle` - `{ target }` → download a sealed, re-verifiable evidence bundle
+- `POST /api/v2/investigations` - `{ target, objective? }` → run an agentic investigation; returns the plan, ledger, findings (with citations and review status), ACH hypotheses and self-scored metrics
+- `GET  /api/v2/investigations/stream` - the same, streamed over SSE (each tool call and phase as it happens)
+- `GET  /api/v2/investigations/tools` - the function-calling tool menu the agent plans over
 
 ---
 

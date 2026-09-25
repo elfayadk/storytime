@@ -54,6 +54,20 @@ export {
   sha256,
   provenance,
 } from './connectors/index.js';
+export { investigate } from './agent/investigate.js';
+export type { InvestigateOptions } from './agent/investigate.js';
+export { toolCatalog, applicableTools, targetSummary } from './agent/tools.js';
+export type { ToolSpec } from './agent/tools.js';
+export { buildHypotheses } from './agent/hypotheses.js';
+export { planInvestigation } from './agent/planner.js';
+export type {
+  Investigation,
+  InvestigationMetrics,
+  InvestigationProgress,
+  Finding,
+  Hypothesis,
+  LedgerStep,
+} from './agent/types.js';
 export type {
   Connector,
   ConnectorInfo,

@@ -17,6 +17,7 @@ import { LivePanel } from './components/LivePanel';
 import { FactsPanel } from './components/FactsPanel';
 import { ArcsPanel } from './components/ArcsPanel';
 import { ReconView } from './components/ReconView';
+import { InvestigateView } from './components/InvestigateView';
 import { buildTimeline, exportUrl, getHealth, type BuildParams, type Health } from './api';
 import { bounds, filterByRange, recomputeStats, type DateRange } from './derive';
 import type { Progress, TimelineResult } from './types';
@@ -42,7 +43,7 @@ export default function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [result, setResult] = useState<TimelineResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<'single' | 'compare' | 'recon'>('single');
+  const [mode, setMode] = useState<'single' | 'compare' | 'recon' | 'investigate'>('single');
   const [range, setRange] = useState<DateRange>({});
 
   const ranged = !!(range.from || range.to);
@@ -71,9 +72,14 @@ export default function App() {
     return a && b ? { a, b } : null;
   }, [params]);
   const reconInit = useMemo(() => params.get('recon'), [params]);
+  const investigateInit = useMemo(() => params.get('investigate'), [params]);
 
   useEffect(() => {
     getHealth().then(setHealth).catch(() => setHealth(null));
+    if (investigateInit) {
+      setMode('investigate');
+      return;
+    }
     if (reconInit) {
       setMode('recon');
       return;
@@ -122,6 +128,7 @@ export default function App() {
           <button data-on={mode === 'single'} onClick={() => setMode('single')}>Trace</button>
           <button data-on={mode === 'compare'} onClick={() => setMode('compare')}>Compare</button>
           <button data-on={mode === 'recon'} onClick={() => setMode('recon')}>Recon</button>
+          <button data-on={mode === 'investigate'} onClick={() => setMode('investigate')}>Investigate</button>
         </div>
         {health ? (
           <span className="tag hide-sm" style={{ marginRight: 4 }}>
@@ -134,7 +141,9 @@ export default function App() {
       </div>
 
       <div className="wrap">
-        {mode === 'recon' ? (
+        {mode === 'investigate' ? (
+          <InvestigateView initialTarget={investigateInit ?? undefined} />
+        ) : mode === 'recon' ? (
           <ReconView initialTarget={reconInit ?? undefined} />
         ) : mode === 'compare' ? (
           <Compare aiAvailable={!!health?.ai.reachable} initialA={compareInit?.a} initialB={compareInit?.b} />

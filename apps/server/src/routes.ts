@@ -16,6 +16,8 @@ import {
   corroborate,
   sealBundle,
   sourceTierOf,
+  investigate,
+  toolCatalog,
   createLogger,
   type Platform,
   type ExportFormat,
@@ -199,6 +201,55 @@ export function setupRoutes(app: Express, store: Store): void {
       res.type('application/json').send(JSON.stringify(bundle, null, 2));
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  // ---- Agentic investigator (upgrade pack doc 04 / memo T2, T4, T10) ----
+  // The function-calling tool menu the agent plans over.
+  app.get('/api/v2/investigations/tools', (_req, res) => {
+    res.json({ tools: toolCatalog() });
+  });
+
+  // Run an investigation and return the whole dossier (plan, ledger, findings,
+  // ACH hypotheses, self-scored metrics). Read-only; public connectors only.
+  app.post('/api/v2/investigations', async (req, res) => {
+    const target = String(req.body?.target ?? '').trim();
+    const objective = String(req.body?.objective ?? '').trim() || `Investigate ${target}`;
+    if (!target) return res.status(400).json({ error: 'target is required' });
+    const cfg = loadConfig({ ai: { ...loadConfig().ai, enabled: true } });
+    try {
+      res.json(await investigate(objective, target, { ua: cfg.userAgent, config: cfg, logger: createLogger('warn') }));
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  // Same, streamed: each planned tool call and phase is pushed as it happens.
+  app.get('/api/v2/investigations/stream', async (req, res) => {
+    const target = String(req.query.target ?? '').trim();
+    const objective = String(req.query.objective ?? '').trim() || `Investigate ${target}`;
+    if (!target) return res.status(400).json({ error: 'target is required' });
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    const send = (event: string, data: unknown) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    const cfg = loadConfig({ ai: { ...loadConfig().ai, enabled: true } });
+    try {
+      const investigation = await investigate(objective, target, {
+        ua: cfg.userAgent,
+        config: cfg,
+        logger: createLogger('warn'),
+        onProgress: (p) => send('progress', p),
+      });
+      send('result', investigation);
+      send('done', { findings: investigation.findings.length });
+    } catch (err) {
+      send('error', { message: (err as Error).message });
+    } finally {
+      res.end();
     }
   });
 
