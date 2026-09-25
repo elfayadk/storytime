@@ -12,7 +12,7 @@ import {
 const TOOL_LABEL: Record<string, string> = {
   crtsh: 'Certificate transparency', dns: 'DNS', internetdb: 'IP intelligence', wayback: 'Wayback Machine',
   opensanctions: 'Sanctions screening', gleif: 'LEI registry', sec: 'SEC EDGAR', courtlistener: 'Court records',
-  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence', sentinel: 'Sentinel-2 imagery',
+  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence', sentinel: 'Sentinel-2 imagery', darkweb: 'Hidden-service index',
 };
 
 function pct(n: number): string {

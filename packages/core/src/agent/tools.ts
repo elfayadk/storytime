@@ -32,6 +32,7 @@ const DESCRIPTIONS: Record<string, string> = {
   nominatim: 'Reverse geocode coordinates to a named place and full address.',
   socmint: 'Check which public platforms have a profile for a username.',
   sentinel: 'List recent Sentinel-2 satellite scenes covering coordinates, with cloud cover.',
+  darkweb: 'Search the Ahmia clearnet index of Tor hidden services for a term.',
 };
 
 const INPUT_KIND: Record<string, ToolSpec['input']> = {

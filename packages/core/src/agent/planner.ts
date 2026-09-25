@@ -17,7 +17,8 @@ export interface Plan {
  */
 const COST: Record<string, number> = {
   dns: 1, internetdb: 1, gleif: 2, sec: 2, opensanctions: 2, openalex: 3,
-  courtlistener: 3, adsb: 3, gdelt: 4, wayback: 5, overpass: 6, crtsh: 7,
+  courtlistener: 3, adsb: 3, nominatim: 3, sentinel: 4, gdelt: 4, wayback: 5,
+  overpass: 6, crtsh: 7, socmint: 7, darkweb: 9,
 };
 
 export async function planInvestigation(

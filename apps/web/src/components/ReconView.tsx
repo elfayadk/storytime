@@ -4,7 +4,7 @@ import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, ty
 const TIER: Record<string, string> = {
   crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive',
   opensanctions: 'primary', gleif: 'primary', sec: 'primary', courtlistener: 'primary', gdelt: 'aggregator', openalex: 'primary',
-  adsb: 'primary', overpass: 'primary', nominatim: 'primary', socmint: 'aggregator', sentinel: 'primary',
+  adsb: 'primary', overpass: 'primary', nominatim: 'primary', socmint: 'aggregator', sentinel: 'primary', darkweb: 'aggregator',
 };
 
 async function downloadBundle(target: string) {
@@ -105,6 +105,22 @@ function renderItems(r: CollectResult) {
             <span className="dnsval" dir="auto">{String((it.data as any).value)}</span>
           </div>
         ))}
+      </div>
+    );
+  }
+  if (r.connector === 'darkweb') {
+    return (
+      <div className="onions">
+        {r.items.map((it, i) => {
+          const d = it.data as any;
+          return (
+            <div className="onion" key={i}>
+              <div className="onion-title" dir="auto">{d.title}</div>
+              <div className="onion-addr">{d.onion}{d.lastSeen ? <span className="onion-seen">last seen {d.lastSeen}</span> : null}</div>
+              {d.snippet ? <div className="onion-snip" dir="auto">{d.snippet}</div> : null}
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -256,6 +272,7 @@ function titleFor(id: string): string {
     opensanctions: 'Sanctions / PEP screening', gleif: 'Legal entities (LEI)', sec: 'SEC filings', courtlistener: 'Court records', gdelt: 'Global news (GDELT)', openalex: 'Academic literature',
     adsb: 'Aircraft nearby (ADS-B)', overpass: 'Places nearby (OpenStreetMap)', nominatim: 'Place at these coordinates',
     socmint: 'Username across platforms', sentinel: 'Satellite imagery (Sentinel-2)',
+    darkweb: 'Hidden services (Tor index)',
   }[id] ?? id;
 }
 function fmtTs(ts: string): string {

@@ -12,7 +12,7 @@ import type { Finding, Investigation, InvestigationProgress, LedgerStep } from '
 const TITLES: Record<string, string> = {
   crtsh: 'Certificate transparency', dns: 'DNS', internetdb: 'IP intelligence', wayback: 'Wayback Machine',
   opensanctions: 'Sanctions screening', gleif: 'LEI registry', sec: 'SEC EDGAR', courtlistener: 'Court records',
-  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence', sentinel: 'Sentinel-2 imagery',
+  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode', socmint: 'Username presence', sentinel: 'Sentinel-2 imagery', darkweb: 'Hidden-service index',
 };
 
 export interface InvestigateOptions {
@@ -227,6 +227,12 @@ function deriveFindings(results: CollectResult[], corr: Corroboration[]): Findin
   if (osm && osm.items.length) {
     const names = osm.items.slice(0, 3).map((it) => (it.data as { name?: string }).name).filter(Boolean);
     out.push(mk(`${osm.items.length} named places nearby${names.length ? ` (e.g. ${names.join(', ')})` : ''}`, 0.72, 'OpenStreetMap proximity', [ev(osm)], 'auto'));
+  }
+
+  const dw = by('darkweb');
+  if (dw && dw.items.length) {
+    const names = dw.items.slice(0, 3).map((it) => (it.data as { title?: string }).title);
+    out.push(mk(`Mentioned on ${dw.items.length} indexed Tor hidden services${names.length ? ` (e.g. ${names.join(', ')})` : ''}`, 0.45, 'hidden-service index search', [{ label: 'Ahmia', url: dw.provenance.sourceUrl }], 'pending', ['Indexed mention only; reading the service content requires Tor and its own authorization.']));
   }
 
   const soc = by('socmint');

@@ -14,6 +14,7 @@ import { overpassConnector } from './overpass.js';
 import { nominatimConnector } from './nominatim.js';
 import { socmintConnector } from './socmint.js';
 import { sentinelConnector } from './sentinel.js';
+import { darkwebConnector } from './darkweb.js';
 
 export const CONNECTORS: Connector[] = [
   crtshConnector,
@@ -31,6 +32,7 @@ export const CONNECTORS: Connector[] = [
   nominatimConnector,
   socmintConnector,
   sentinelConnector,
+  darkwebConnector,
 ];
 
 export function getConnector(id: string): Connector | undefined {
