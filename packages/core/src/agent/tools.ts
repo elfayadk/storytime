@@ -29,12 +29,13 @@ const DESCRIPTIONS: Record<string, string> = {
   openalex: 'Search scholarly literature and authorship for a name or organization.',
   adsb: 'List live aircraft near coordinates, or track one aircraft by ICAO hex.',
   overpass: 'List named places, amenities and buildings near coordinates from OpenStreetMap.',
+  nominatim: 'Reverse geocode coordinates to a named place and full address.',
 };
 
 const INPUT_KIND: Record<string, ToolSpec['input']> = {
   crtsh: 'domain', dns: 'domain', wayback: 'domain', internetdb: 'ip',
   opensanctions: 'name', gleif: 'name', sec: 'name', courtlistener: 'name', gdelt: 'name', openalex: 'name',
-  adsb: 'coordinates', overpass: 'coordinates',
+  adsb: 'coordinates', overpass: 'coordinates', nominatim: 'coordinates',
 };
 
 /** The full menu, one spec per registered connector. */

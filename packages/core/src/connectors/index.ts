@@ -11,6 +11,7 @@ import { gleifConnector } from './gleif.js';
 import { secConnector } from './sec.js';
 import { adsbConnector } from './adsb.js';
 import { overpassConnector } from './overpass.js';
+import { nominatimConnector } from './nominatim.js';
 
 export const CONNECTORS: Connector[] = [
   crtshConnector,
@@ -25,6 +26,7 @@ export const CONNECTORS: Connector[] = [
   openalexConnector,
   adsbConnector,
   overpassConnector,
+  nominatimConnector,
 ];
 
 export function getConnector(id: string): Connector | undefined {

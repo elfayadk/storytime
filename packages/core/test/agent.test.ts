@@ -12,7 +12,7 @@ function result(connector: string, domain: Domain, items: Record<string, unknown
 
 test('toolCatalog exposes one tool per connector, no drift', () => {
   const cat = toolCatalog();
-  assert.equal(cat.length, 12);
+  assert.equal(cat.length, 13);
   assert.ok(cat.every((t) => t.name && t.description && t.domain));
   assert.ok(cat.find((t) => t.name === 'gleif'));
 });

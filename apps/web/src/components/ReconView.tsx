@@ -4,7 +4,7 @@ import { reconTarget, reconBundleUrl, type CollectResult, type Corroboration, ty
 const TIER: Record<string, string> = {
   crtsh: 'primary', dns: 'primary', internetdb: 'aggregator', wayback: 'archive',
   opensanctions: 'primary', gleif: 'primary', sec: 'primary', courtlistener: 'primary', gdelt: 'aggregator', openalex: 'primary',
-  adsb: 'primary', overpass: 'primary',
+  adsb: 'primary', overpass: 'primary', nominatim: 'primary',
 };
 
 async function downloadBundle(target: string) {
@@ -124,7 +124,7 @@ function renderItems(r: CollectResult) {
       </div>
     );
   }
-  if (['opensanctions', 'gleif', 'sec', 'courtlistener', 'gdelt', 'openalex', 'adsb', 'overpass'].includes(r.connector)) {
+  if (['opensanctions', 'gleif', 'sec', 'courtlistener', 'gdelt', 'openalex', 'adsb', 'overpass', 'nominatim'].includes(r.connector)) {
     return (
       <div className="records">
         {r.items.slice(0, 40).map((it, i) => (
@@ -173,6 +173,9 @@ function RecordRow({ connector, d }: { connector: string; d: any }) {
   } else if (connector === 'overpass') {
     title = d.name;
     meta = [d.kind, d.lat != null ? `${Number(d.lat).toFixed(4)}, ${Number(d.lon).toFixed(4)}` : ''].filter(Boolean).join(' - ');
+  } else if (connector === 'nominatim') {
+    title = d.displayName ?? d.name;
+    meta = [d.category, d.type, d.countryCode].filter(Boolean).join(' - ');
   }
   return (
     <div className="record">
@@ -208,7 +211,7 @@ function titleFor(id: string): string {
   return {
     crtsh: 'Subdomains (CT logs)', dns: 'DNS records', internetdb: 'IP intelligence', wayback: 'Wayback history',
     opensanctions: 'Sanctions / PEP screening', gleif: 'Legal entities (LEI)', sec: 'SEC filings', courtlistener: 'Court records', gdelt: 'Global news (GDELT)', openalex: 'Academic literature',
-    adsb: 'Aircraft nearby (ADS-B)', overpass: 'Places nearby (OpenStreetMap)',
+    adsb: 'Aircraft nearby (ADS-B)', overpass: 'Places nearby (OpenStreetMap)', nominatim: 'Place at these coordinates',
   }[id] ?? id;
 }
 function fmtTs(ts: string): string {

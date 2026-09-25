@@ -12,7 +12,7 @@ import type { Finding, Investigation, InvestigationProgress, LedgerStep } from '
 const TITLES: Record<string, string> = {
   crtsh: 'Certificate transparency', dns: 'DNS', internetdb: 'IP intelligence', wayback: 'Wayback Machine',
   opensanctions: 'Sanctions screening', gleif: 'LEI registry', sec: 'SEC EDGAR', courtlistener: 'Court records',
-  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap',
+  gdelt: 'GDELT news', openalex: 'OpenAlex', adsb: 'ADS-B', overpass: 'OpenStreetMap', nominatim: 'Reverse geocode',
 };
 
 export interface InvestigateOptions {
@@ -227,6 +227,12 @@ function deriveFindings(results: CollectResult[], corr: Corroboration[]): Findin
   if (osm && osm.items.length) {
     const names = osm.items.slice(0, 3).map((it) => (it.data as { name?: string }).name).filter(Boolean);
     out.push(mk(`${osm.items.length} named places nearby${names.length ? ` (e.g. ${names.join(', ')})` : ''}`, 0.72, 'OpenStreetMap proximity', [ev(osm)], 'auto'));
+  }
+
+  const nom = by('nominatim');
+  if (nom && nom.items.length) {
+    const d = nom.items[0].data as { displayName?: string; category?: string; type?: string };
+    out.push(mk(`Coordinates resolve to ${d.displayName}`, 0.9, 'reverse geocoding', [ev(nom)], 'auto', d.category ? [`OpenStreetMap classifies this location as ${d.category}${d.type ? `/${d.type}` : ''}.`] : undefined));
   }
 
   const ac = by('adsb');
