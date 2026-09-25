@@ -1,7 +1,7 @@
 {
   "name": "@storytime/web",
-  "version": "2.0.0",
-  "description": "Storytime web UI — React + Vite + MUI, OpenStreetMap maps",
+  "version": "2.1.0",
+  "description": "Storytime web UI - React + Vite, bespoke design, OpenStreetMap maps",
   "license": "MIT",
   "type": "module",
   "scripts": {

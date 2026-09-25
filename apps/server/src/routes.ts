@@ -76,7 +76,7 @@ export function setupRoutes(app: Express, store: Store): void {
     const ollama = new OllamaClient({ ...cfg, ai: { ...cfg.ai, enabled: true } }, createLogger('silent'));
     res.json({
       ok: true,
-      version: '2.0.0',
+      version: '2.1.0',
       platforms: PLATFORMS,
       ai: { configured: cfg.ai.enabled, reachable: await ollama.available() },
     });

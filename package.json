@@ -1,8 +1,8 @@
 {
   "name": "storytime",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
-  "description": "Cross-Platform Activity Timeline Builder — 100% free & open-source",
+  "description": "Cross-Platform Activity Timeline Builder - 100% free & open-source",
   "license": "MIT",
   "type": "module",
   "workspaces": [

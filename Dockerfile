@@ -1,4 +1,4 @@
-# ── Storytime v2 — single-image build (core + server + web) ──────────────────
+# ── Storytime v2 - single-image build (core + server + web) ──────────────────
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 

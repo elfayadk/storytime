@@ -1,4 +1,4 @@
-# Storytime v2 — one command to run everything: `docker compose up --build`
+# Storytime v2 - one command to run everything: `docker compose up --build`
 # 100% free/open-source. The optional `ollama` profile adds a local LLM.
 services:
   storytime:
